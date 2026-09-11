@@ -138,7 +138,9 @@
 
 			<v-list-item
 				nav
-				:to="docsRoute.getPath()"
+				href="https://docs.vaultisse.com"
+				target="_blank"
+				rel="noopener"
 				:title="t(AppLabels.HELP)"
 				prepend-icon="mdi-help-circle-outline"
 				density="compact"
@@ -151,7 +153,8 @@
 <script setup lang="ts">
 /**
  * Left-hand navigation drawer: links to every top-level view, plus the print
- * queue and help/docs. Stays fully expanded by default; if the user turns on
+ * queue and a Help link out to docs.vaultisse.com. Stays fully expanded by
+ * default; if the user turns on
  * "Compact menu" in Settings (`users.sidebar_rail`, off by default) it
  * collapses to icon-only "rail" mode instead, expanding again on hover.
  * Styled as a dark "shelf frame" (see --pb-nav-* tokens) in both themes -
@@ -169,7 +172,6 @@ import {categoriesRoute} from "@/router/routes/CategoriesRoute";
 import {customersRoute} from "@/router/routes/CustomersRoute";
 import {authorsRoute} from "@/router/routes/AuthorsRoute";
 import {loansRoute} from "@/router/routes/LoansRoute";
-import {docsRoute} from "@/router/routes/DocsRoute";
 import {SearchRoute} from "@/router/routes/SearchRoute";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
