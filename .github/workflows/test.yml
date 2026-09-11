@@ -1,0 +1,63 @@
+name: Server tests
+
+# Runs on every push (any branch) and every PR targeting main, so a commit
+# never lands without the suite having run against it - see docs/TESTING.md.
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    # A throwaway Postgres, matching the version docker-compose.yml runs in
+    # production - test/setup/globalSetup.js drops/recreates a database on
+    # it from scratch (databaseSchema.sql) before the suite runs.
+    services:
+      postgres:
+        image: postgres:18-alpine
+        env:
+          POSTGRES_DB: vaultisse_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d vaultisse_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_HOST: localhost
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: vaultisse_test
+      TEST_DB_NAME: vaultisse_test
+      JWT_SECRET: ci-test-secret-not-for-production-use
+      SESSION_TIME: "3600000"
+      FRONT_END_URL: http://localhost:5173
+      GOOGLE_BOOKS_API_KEY: ""
+      MAX_IMPORT_FILE_SIZE_MB: "10"
+      MAX_EBOOK_FILE_SIZE_MB: "10"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+
+      - name: Install dependencies
+        working-directory: server
+        run: npm ci
+
+      - name: Run tests
+        working-directory: server
+        run: npm test

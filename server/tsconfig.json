@@ -107,5 +107,10 @@
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
-  }
+  },
+  // Excluded from the production build (rootDir above is "./src/", so a
+  // sibling "test" directory would otherwise fail with TS6059). ts-jest
+  // still transforms test files fine - see tsconfig.test.json, which uses
+  // isolatedModules (per-file transpilation, no whole-program file list).
+  "exclude": ["node_modules", "dist", "test"]
 }

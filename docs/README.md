@@ -15,6 +15,9 @@ there.
   (`activity_log`), and how a dying session surfaces on the client.
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - self-hosting: local-only, behind your
   own reverse proxy, behind Cloudflare Tunnel, or the one-click Unraid template.
+- **[TESTING.md](TESTING.md)** - running the server's Jest/Supertest suite
+  locally, how the dedicated test database and auth helpers work, and the CI
+  workflow that runs it on every push/PR.
 - **[ROADMAP.md](ROADMAP.md)** - feature ideas that don't have anyone working
   on them yet, for contributors looking for something to pick up.
 

@@ -1571,8 +1571,13 @@ router.put('/:id/stock/:stock_id', requireAuth, async (req: Request, res: Respon
         // already-booked stock (e.g. just moving its location) doesn't reset
         // its loan date.
         const queryResult = await pool.query(
+            // $1::smallint - book_stocks.status is SMALLINT, but $1 is also
+            // compared against the bare integer literal `2` below; without
+            // an explicit cast, Postgres can't decide which type to infer
+            // for $1 and rejects the whole statement (42P08 "inconsistent
+            // types deduced for parameter $1: integer versus smallint").
             `UPDATE book_stocks
-             SET status = $1,
+             SET status = $1::smallint,
                  location_id = $2,
                  customer_id = $3,
                  loaned_at = CASE
