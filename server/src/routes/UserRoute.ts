@@ -151,7 +151,7 @@ router.put("", requireAuth, async (req: Request, res: Response) => {
 
         await client.query(`
                     UPDATE users
-                    SET name = $1, 
+                    SET name = $1,
                         email = $2,
                         language = $3,
                         region = $4

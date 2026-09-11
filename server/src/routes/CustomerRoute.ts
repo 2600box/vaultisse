@@ -35,7 +35,7 @@ const router = Router();
  * Example response (200):
  *  [{ "id": 1, "name": "Class 4B", "description": "", "total_customers": 22 }]
  */
-//@ts-ignore
+// @ts-ignore
 router.get('/group', requireAuth, async (req: Request, res: Response) => {
     const pool = appService.getDatabasePool();
     const userId = appService.getSessionUser(req);
@@ -73,7 +73,7 @@ router.get('/group', requireAuth, async (req: Request, res: Response) => {
  * Example response (201): { "id": 1, "name": "Class 4B", "description": null }
  * Responses: 400 "Group name is required" | 409 if the name is already taken.
  */
-//@ts-ignore
+// @ts-ignore
 router.post('/group', requireAuth, async (req: Request, res: Response) => {
     const { name, description } = req.body;
     const userId = appService.getSessionUser(req);
@@ -118,7 +118,7 @@ router.post('/group', requireAuth, async (req: Request, res: Response) => {
  * Responses: 200 the updated group | 400 "Group name is required" |
  *            404 "Group not found" | 409 name already taken.
  */
-//@ts-ignore
+// @ts-ignore
 router.put('/group/:id', requireAuth, async (req: Request, res: Response) => {
     const groupId = Number(req.params.id);
     const { name, description } = req.body;
@@ -176,7 +176,7 @@ router.put('/group/:id', requireAuth, async (req: Request, res: Response) => {
  *
  * Responses: 200 {"message": "Customer group deleted successfully"} | 404 "Group not found".
  */
-//@ts-ignore
+// @ts-ignore
 router.delete('/group/:id', requireAuth, async (req: Request, res: Response) => {
     const groupId = Number(req.params.id);
     const userId = appService.getSessionUser(req);
@@ -218,7 +218,7 @@ router.delete('/group/:id', requireAuth, async (req: Request, res: Response) => 
  * Example response (200): { "id": 7, "name": "Jane Doe", "group_id": 1 }
  * Responses: 404 "Group not found" | 404 "Customer not found".
  */
-//@ts-ignore
+// @ts-ignore
 router.put('/:id/group/:groupId', requireAuth, async (req: Request, res: Response) => {
     const customerId = Number(req.params.id);
     const groupId = Number(req.params.groupId);
@@ -278,7 +278,7 @@ router.put('/:id/group/:groupId', requireAuth, async (req: Request, res: Respons
  * Example response (200): { "id": 7, "name": "Jane Doe", "group_id": null }
  * Response (404): "Customer not found".
  */
-//@ts-ignore
+// @ts-ignore
 router.delete('/:id/group', requireAuth, async (req: Request, res: Response) => {
     const customerId = Number(req.params.id);
     const userId = appService.getSessionUser(req);
@@ -329,7 +329,7 @@ router.delete('/:id/group', requireAuth, async (req: Request, res: Response) => 
  *                     "group_name": "Class 4B", "total_books": 2 }]
  *  }
  */
-//@ts-ignore
+// @ts-ignore
 router.get('', requireAuth, async (req: Request, res: Response) => {
     const pool = appService.getDatabasePool();
     const client = await pool.connect();
@@ -373,7 +373,7 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
  *
  * Example response (200): { "id": 7, "name": "Jane Doe", "group_id": null, "group_name": null }
  */
-//@ts-ignore
+// @ts-ignore
 router.post('', requireAuth, async (req: Request, res: Response) => {
     const name = req.body.name;
 
@@ -421,7 +421,7 @@ router.post('', requireAuth, async (req: Request, res: Response) => {
  *
  * Example response (200): { "id": 7, "name": "...", "group_id": 1, "group_name": "Class 4B" }
  */
-//@ts-ignore
+// @ts-ignore
 router.put('/:id', requireAuth, async (req: Request, res: Response) => {
     const customerId = req.params.id;
     if (!customerId) {
@@ -480,7 +480,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
  *
  * Responses: 200 {"message": "Customer deleted successfully"} | 404 {"error": "Customer not found"}.
  */
-//@ts-ignore
+// @ts-ignore
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     appService.getLogger().debug(`Delete customer, id: ${id}`);
@@ -521,7 +521,7 @@ router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
  *  [{ "id": 12, "name": "The Hobbit", "image_url": "https://...",
  *     "isbn": "9780261102217", "code": "a1b2c3d4e5" }]
  */
-//@ts-ignore
+// @ts-ignore
 router.get('/:id/books', requireAuth, async (req: Request, res: Response) => {
     const customerId = Number(req.params.id);
     if (!customerId) {
@@ -552,7 +552,7 @@ router.get('/:id/books', requireAuth, async (req: Request, res: Response) => {
  * Example response (200): the updated list of books on loan to this customer
  * (same shape as GET /customer/:id/books).
  */
-//@ts-ignore
+// @ts-ignore
 router.post('/:id/add/books', requireAuth, async (req: Request, res: Response) => {
     const customerId = Number(req.params.id);
     const books: string[] = req.body.books;
@@ -607,7 +607,7 @@ router.post('/:id/add/books', requireAuth, async (req: Request, res: Response) =
  *
  * Response: 200 (empty body) on success.
  */
-//@ts-ignore
+// @ts-ignore
 router.delete('/:id/book/:bookStockCode', requireAuth, async (req: Request, res: Response) => {
     const customerId = Number(req.params.id);
     const bookStockCode = String(req.params.bookStockCode);

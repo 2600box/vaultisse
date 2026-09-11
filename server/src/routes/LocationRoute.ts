@@ -24,7 +24,7 @@ const router = Router();
  * Example response (200):
  *  [{ "id": 2, "name": "Main shelf", "description": "Front room", "total_books": 14 }]
  */
-//@ts-ignore
+// @ts-ignore
 router.get('', requireAuth, async (req: Request, res: Response) => {
     const pool = appService.getDatabasePool();
     const client = await pool.connect();
@@ -59,7 +59,7 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
  *  [{ "id": 5, "name": "The Hobbit", "book_id": 12, "code": "a1b2c3d4e5",
  *     "status": 0, "image_url": "https://..." }]
  */
-//@ts-ignore
+// @ts-ignore
 router.get('/:id/books', requireAuth, async (req: Request, res: Response) => {
     const locationId = Number(req.params.id);
     if (!locationId) {
@@ -91,7 +91,7 @@ router.get('/:id/books', requireAuth, async (req: Request, res: Response) => {
  *
  * Response (404): "Location does not exist".
  */
-//@ts-ignore
+// @ts-ignore
 router.post('/:id/add/books', requireAuth, async (req: Request, res: Response) => {
     const locationId = Number(req.params.id);
     const books: string[] = req.body.books;
@@ -139,7 +139,7 @@ router.post('/:id/add/books', requireAuth, async (req: Request, res: Response) =
  *
  * Example response (200): { "id": 2, "name": "Main shelf", "description": "Front room", "total_books": 0 }
  */
-//@ts-ignore
+// @ts-ignore
 router.post('', requireAuth, async (req: Request, res: Response) => {
     const name = req.body.name;
     const description = req.body.description;
@@ -185,7 +185,7 @@ router.post('', requireAuth, async (req: Request, res: Response) => {
  *
  * Example response (200): the updated location row (same shape as GET /location).
  */
-//@ts-ignore
+// @ts-ignore
 router.put('/:id', requireAuth, async (req: Request, res: Response) => {
     const locationId = req.params.id;
     if (!locationId) {
@@ -243,7 +243,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
  *
  * Responses: 200 {"message": "Location deleted successfully"} | 404 {"error": "Location not found"}.
  */
-//@ts-ignore
+// @ts-ignore
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
     const id = Number(req.params.id);
 

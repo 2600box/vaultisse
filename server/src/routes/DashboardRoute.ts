@@ -45,7 +45,7 @@ const router = Router();
  * nowhere near `Number.MAX_SAFE_INTEGER` and the client types (and Vuetify
  * prop checks) expect actual numbers.
  */
-//@ts-ignore
+// @ts-ignore
 router.get('', requireAuth, async (req: Request, res: Response) => {
     const pool = appService.getDatabasePool();
     const userId = appService.getSessionUser(req);

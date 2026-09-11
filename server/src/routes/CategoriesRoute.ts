@@ -21,7 +21,7 @@ const router = Router();
  *
  * Example response (200): [{ "id": 3, "name": "Fantasy" }]
  */
-//@ts-ignore
+// @ts-ignore
 router.get('', requireAuth, async (req: Request, res: Response) => {
     const pool = appService.getDatabasePool();
     const client = await pool.connect();
@@ -29,7 +29,7 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
 
     try {
         const result = await client.query(`
-            SELECT id, 
+            SELECT id,
                    name
               FROM categories
              WHERE user_id = $1
@@ -52,7 +52,7 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
  *
  * Example response (200): { "id": 3, "name": "Fantasy" }
  */
-//@ts-ignore
+// @ts-ignore
 router.post('', requireAuth, async (req: Request, res: Response) => {
     const name = req.body.name;
 
@@ -95,7 +95,7 @@ router.post('', requireAuth, async (req: Request, res: Response) => {
  *
  * Example response (200): { "id": 3, "name": "..." }
  */
-//@ts-ignore
+// @ts-ignore
 router.put('/:id', requireAuth, async (req: Request, res: Response) => {
     const categoryId = req.params.id;
     if (!categoryId) {
@@ -150,7 +150,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
  *
  * Responses: 200 {"message": "Category deleted successfully"} | 404 {"error": "Category not found"}.
  */
-//@ts-ignore
+// @ts-ignore
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     appService.getLogger().debug(`Delete category, id: ${id}`);

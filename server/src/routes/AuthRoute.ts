@@ -129,7 +129,7 @@ router.get('/app/*', requireAuthPage, async (req: Request, res: Response) => {
 router.get("/", (req: Request, res: Response) => {
     // Check if the user is authenticated by looking at the session
 
-    //@ts-ignore
+    // @ts-ignore
     if (req.cookies.token) {
         appService.getLogger().debug("User already logged in, redirecting to /app...");
         return res.redirect("/app"); // Redirect to /app if user is logged in
@@ -145,7 +145,7 @@ router.get("/", (req: Request, res: Response) => {
  * Serves the static login page and clears any existing session cookie.
  * Unauthenticated.
  */
-//@ts-ignore
+// @ts-ignore
 router.get("/login", (req: Request, res: Response) => {
     // If user goes to login page, clear the current token.
     // we can improve it, by checking if the token is valid, etc ad redirect to app
@@ -178,7 +178,7 @@ router.get("/login", (req: Request, res: Response) => {
  *
  * Responses: 400 missing fields | 401 invalid credentials | 500 server error.
  */
-//@ts-ignore
+// @ts-ignore
 router.post("/login", authLimiter,  async (req: Request, res: Response) => {
     appService.getLogger().debug("Handle login authentication");
     const username = typeof req.body.username === "string" ? req.body.username.trim() : req.body.username;
@@ -273,10 +273,10 @@ router.post("/login", authLimiter,  async (req: Request, res: Response) => {
  * Responses: 400 missing code | 401 no/expired pending login or invalid code |
  *            500 server error.
  */
-//@ts-ignore
+// @ts-ignore
 router.post("/login/2fa", twoFaLimiter, async (req: Request, res: Response) => {
     const {code} = req.body;
-    //@ts-ignore
+    // @ts-ignore
     const pendingToken = req.cookies.pending_2fa_token;
 
     if (!code) {
@@ -343,7 +343,7 @@ router.post("/login/2fa", twoFaLimiter, async (req: Request, res: Response) => {
  * cookie is already present. Unauthenticated.
  */
 router.get("/register", (req: Request, res: Response) => {
-    //@ts-ignore
+    // @ts-ignore
     if (req.cookies.token) {
         return res.redirect("/app");
     }
@@ -454,7 +454,7 @@ router.post("/register", authLimiter, async (req: Request, res: Response) => {
 router.get("/logout", async (req: Request, res: Response) => {
     appService.getLogger().debug("Logout user");
 
-    //@ts-ignore
+    // @ts-ignore
     const token = req.cookies.token;
     if (token) {
         try {

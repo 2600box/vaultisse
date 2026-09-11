@@ -43,7 +43,7 @@ const router = Router();
  *    ]
  *  }
  */
-//@ts-ignore
+// @ts-ignore
 router.get('', requireAuth, async (req: Request, res: Response) => {
     const pool = appService.getDatabasePool();
     const userId = appService.getSessionUser(req);
@@ -143,7 +143,7 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
  *
  * Response (400): "date_from and date_to are required" if either is missing.
  */
-//@ts-ignore
+// @ts-ignore
 router.get('/report', requireAuth, async (req: Request, res: Response) => {
     const pool = appService.getDatabasePool();
     const userId = appService.getSessionUser(req);

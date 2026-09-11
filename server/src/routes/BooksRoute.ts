@@ -32,7 +32,7 @@ import {normalizeAndValidateIsbn} from "../utils/IsbnVerification";
 import {isValidEpub, isValidMobi, isValidPdf} from "../utils/FileSignature";
 import {recordLoan, recordReturn} from "../utils/LoanHistory";
 import {handleUploadError} from "../middlewares/UploadErrorMiddleware";
-//@ts-ignore
+// @ts-ignore
 const router: Router = Router();
 
 // Multer setup - store in memory
@@ -112,7 +112,7 @@ const fileUpload = multer({
  *    ]
  *  }
  */
-//@ts-ignore
+// @ts-ignore
 router.get('/search', requireAuth, async (req: Request, res: Response) => {
     // Params
     const query = req.query.query ? String(req.query.query) : undefined;
@@ -135,7 +135,7 @@ router.get('/search', requireAuth, async (req: Request, res: Response) => {
         const skip = MAX_ROWS * page;
 
         const params: any[] = [userId];
-        const conditions: Array<String> = [
+        const conditions: String[] = [
             `books.user_id = $1`
         ];
 
@@ -275,7 +275,7 @@ router.get('/search', requireAuth, async (req: Request, res: Response) => {
  * Example response (200):
  *  { "total": 42, "recent": 3, "onLoan": 5, "noStock": 10 }
  */
-//@ts-ignore
+// @ts-ignore
 router.get('/counters', requireAuth, async (req: Request, res: Response) => {
     const userId = appService.getSessionUser(req);
     const pool = appService.getDatabasePool();
@@ -336,7 +336,7 @@ router.get('/counters', requireAuth, async (req: Request, res: Response) => {
  *
  * Response (404): "Book not found" - when no book with that id belongs to the caller.
  */
-//@ts-ignore
+// @ts-ignore
 router.get('/:id', requireAuth, async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     appService.getLogger().debug(`Get book, id: ${id}`);
@@ -458,7 +458,7 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
  *            400 {"error": "Invalid image URL"} |
  *            404 {"error": "Book not found"} | 500 on failure (rolls back).
  */
-//@ts-ignore
+// @ts-ignore
 router.put('/:id', requireAuth, async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     appService.getLogger().debug(`Update book, id: ${id}`);
@@ -594,7 +594,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
  * Responses: 200 {"message": "Book deleted successfully"} |
  *            404 {"error": "Book not found"} | 500 on failure.
  */
-//@ts-ignore
+// @ts-ignore
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     appService.getLogger().debug(`Delete book, id: ${id}`);
@@ -837,7 +837,7 @@ router.delete('/:id/file/:fileId', requireAuth, async (req: Request, res: Respon
  *
  * Response (200): the new book's id, e.g. `42`.
  */
-//@ts-ignore
+// @ts-ignore
 router.post('', requireAuth, upload.single("image"), handleUploadError(maxCoverImageSizeMb), async (req: Request, res: Response) => {
     const name = req.body.name;
     const description = req.body.description;
@@ -910,7 +910,7 @@ router.post('', requireAuth, upload.single("image"), handleUploadError(maxCoverI
  * Responses (404): "No ISBN code provided" | "Book not found" (no metadata match).
  * Response (502): "External book service failed" (Google/Open Library request failed).
  */
-//@ts-ignore
+// @ts-ignore
 router.post(
     '/isbn/:isbn',
     requireAuth,
@@ -996,7 +996,7 @@ router.post(
                 /**
                  * BOOK
                  */
-                let bookId = await __getOrCreateBook(
+                const bookId = await __getOrCreateBook(
                     client,
                     {
                         name: truncate(name, 255),
@@ -1301,7 +1301,7 @@ async function __ensureAuthors(
     userId: number
 ) {
     for (const author of authors) {
-        let result = await client.query(
+        const result = await client.query(
             'SELECT id FROM authors WHERE name = $1 AND user_id = $2',
             [author, userId]
         );
@@ -1378,7 +1378,7 @@ async function __addBookToLocation(
  *
  * Responses: 404 "Location not found" | 406 if status is "booked" (2) | 500 on failure.
  */
-//@ts-ignore
+// @ts-ignore
 router.post('/:id/stock', requireAuth, async (req: Request, res: Response) => {
     const bookId = req.params.id;
     const status = req.body.status;
@@ -1470,7 +1470,7 @@ router.post('/:id/stock', requireAuth, async (req: Request, res: Response) => {
  *
  * Response (200): boolean - `true` if a row was deleted, `false` otherwise.
  */
-//@ts-ignore
+// @ts-ignore
 router.delete('/:id/stock/:stock_id', requireAuth, async (req: Request, res: Response) => {
     const bookId = req.params.id;
     const stockId = req.params.stock_id;
@@ -1517,7 +1517,7 @@ router.delete('/:id/stock/:stock_id', requireAuth, async (req: Request, res: Res
  *
  * Response (404): "Location not found" if `location_id` doesn't belong to the caller.
  */
-//@ts-ignore
+// @ts-ignore
 router.put('/:id/stock/:stock_id', requireAuth, async (req: Request, res: Response) => {
     const bookId = req.params.id;
     const stockId = req.params.stock_id;
@@ -1639,7 +1639,7 @@ router.put('/:id/stock/:stock_id', requireAuth, async (req: Request, res: Respon
  *
  * Response (404): "Book stock not found".
  */
-//@ts-ignore
+// @ts-ignore
 router.get('/:bookCode/add/md', requireAuth, async (req: Request, res: Response) => {
     const bookCode = String(req.params.bookCode).trim();
     const userId = appService.getSessionUser(req);
@@ -1704,7 +1704,7 @@ router.get('/:bookCode/add/md', requireAuth, async (req: Request, res: Response)
  *
  * Response: 200 (empty body) on success, 500 on failure.
  */
-//@ts-ignore
+// @ts-ignore
 router.post('/return', requireAuth, upload.single("image"), handleUploadError(maxCoverImageSizeMb), async (req: Request, res: Response) => {
     const books: string[] = req.body.books;
     const pool = appService.getDatabasePool();
@@ -1741,8 +1741,12 @@ const ALLOWED_IMAGE_HOSTS = new Set([
  * a client could set books.image_url to any external URL, which the app
  * would then load as an <img src> - a tracking-pixel / IP-disclosure vector,
  * and it makes the CSP imgSrc allowlist meaningless.
+ *
+ * Exported so `ImportRoute.ts` can apply the exact same rule to a
+ * user-supplied cover in an import CSV, rather than keeping a second copy of
+ * a security-relevant allowlist that could silently drift from this one.
  */
-function isAllowedImageUrl(url: string): boolean {
+export function isAllowedImageUrl(url: string): boolean {
     if (url.startsWith('data:image/png;base64,') || url.startsWith('data:image/jpeg;base64,')) {
         return true;
     }
