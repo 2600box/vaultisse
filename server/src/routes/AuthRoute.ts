@@ -181,7 +181,8 @@ router.get("/login", (req: Request, res: Response) => {
 //@ts-ignore
 router.post("/login", authLimiter,  async (req: Request, res: Response) => {
     appService.getLogger().debug("Handle login authentication");
-    const {username, password} = req.body;
+    const username = typeof req.body.username === "string" ? req.body.username.trim() : req.body.username;
+    const {password} = req.body;
     if (!username || !password) {
         return res.status(400).json({message: "Missing username or password"});
     }
@@ -379,7 +380,10 @@ router.get("/register", (req: Request, res: Response) => {
  *            500 server error.
  */
 router.post("/register", authLimiter, async (req: Request, res: Response) => {
-    const { userName, email, name, password } = req.body;
+    const { password } = req.body;
+    const userName = typeof req.body.userName === "string" ? req.body.userName.trim() : req.body.userName;
+    const email = typeof req.body.email === "string" ? req.body.email.trim() : req.body.email;
+    const name = typeof req.body.name === "string" ? req.body.name.trim() : req.body.name;
 
     // Basic input validation
     if (!email || !userName || !name || !password) {
