@@ -1,8 +1,11 @@
 name: Docker release
 
 # Fires on version tags, e.g. v1.2.3 (created by `npm version` — see
-# "Releasing a new version" in the README). Builds the production image,
-# pushes it to GHCR, and cuts a matching GitHub Release.
+# "Releasing a new version" in the README). Runs the server test suite
+# (calling test.yml directly, since that workflow skips tag pushes to avoid
+# double-running against a commit already tested on its branch push) and,
+# only if that passes, builds the production image, pushes it to GHCR, and
+# cuts a matching GitHub Release.
 on:
   push:
     tags:
@@ -16,7 +19,11 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
   build-and-release:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

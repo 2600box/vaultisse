@@ -2,10 +2,17 @@ name: Server tests
 
 # Runs on every push (any branch) and every PR targeting main, so a commit
 # never lands without the suite having run against it - see docs/TESTING.md.
+# Tag pushes are excluded: a release tag points at a commit that already ran
+# through this workflow via its branch push, so re-running here would just
+# duplicate that - docker-release.yml calls this workflow directly instead
+# (see its "test" job) to gate the image build on it.
 on:
   push:
+    tags-ignore:
+      - "v*.*.*"
   pull_request:
     branches: [main]
+  workflow_call:
 
 jobs:
   test:
