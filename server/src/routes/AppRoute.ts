@@ -9,7 +9,6 @@
 import { Router, Request, Response } from 'express';
 import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
-import path from "path";
 
 const router = Router();
 
@@ -50,10 +49,11 @@ router.get('/version', (req: Request, res: Response) => {
  *    "formats": [{ "id": 1, "name": "Paperback" }],
  *    "locations": [{ "id": 2, "name": "Main shelf", "description": "" }],
  *    "customers": [{ "id": 7, "name": "Jane Doe" }],
- *    "labels": { "app.title": "Vaultisse" }
+ *    "labels": { "app.title": "Vaultisse" },
+ *    "maxImportFileSizeMb": 10
  *  }
  */
-//@ts-ignore
+// @ts-ignore
 router.get('/policy', requireAuth, async (req: Request, res: Response) => {
     const userId = appService.getSessionUser(req)
 
@@ -126,13 +126,14 @@ router.get('/policy', requireAuth, async (req: Request, res: Response) => {
     }
 
     res.status(200).json({
-        user:user,
-        categories: categories,
-        languages: languages,
-        formats: formats,
-        locations: locations,
-        customers: customers,
+        user,
+        categories,
+        languages,
+        formats,
+        locations,
+        customers,
         labels: appLabels,
+        maxImportFileSizeMb: appService.getMaxImportFileSizeMb(),
     });
 });
 

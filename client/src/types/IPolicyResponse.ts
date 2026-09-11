@@ -28,4 +28,6 @@ export default interface IPolicyResponse {
     locations: ILocation[];
     /** UI translation strings for the user's language, keyed by `AppLabels`. */
     labels: Record<AppLabels, string>;
+    /** Max accepted size, in MB, for a `POST /import/library` upload - see `ImportRoute.ts`. */
+    maxImportFileSizeMb: number;
 }

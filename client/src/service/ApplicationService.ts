@@ -82,6 +82,12 @@ export class ApplicationService {
     private m_locations: Location[];
 
     /**
+     * Max accepted size, in MB, for a `POST /import/library` upload.
+     * @private
+     */
+    private m_maxImportFileSizeMb: number;
+
+    /**
      * Initializes default empty states and error handling.
      */
     public constructor() {
@@ -91,6 +97,7 @@ export class ApplicationService {
         this.m_locations = [];
         this.m_categories = [];
         this.m_formats = [];
+        this.m_maxImportFileSizeMb = 0;
     }
 
     /**
@@ -111,6 +118,7 @@ export class ApplicationService {
             this.m_languages = data.languages.map((lang) => new Language(lang));
             this.m_formats = data.formats.map((format) => new Format(format));
             this.m_locations = data.locations.map((location) => new Location(location));
+            this.m_maxImportFileSizeMb = data.maxImportFileSizeMb;
 
             // Set i18n locale
             //@ts-ignore
@@ -240,6 +248,15 @@ export class ApplicationService {
      */
     public setLocations(items: Location[]) {
         this.m_locations = items;
+    }
+
+    /**
+     * Max accepted size, in MB, for a `POST /import/library` upload - use
+     * this instead of hardcoding a copy of the server's limit, which can
+     * silently drift out of sync with it.
+     */
+    public getMaxImportFileSizeMb(): number {
+        return this.m_maxImportFileSizeMb;
     }
 }
 

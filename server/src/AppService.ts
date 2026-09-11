@@ -92,6 +92,14 @@ export class AppService {
     private readonly m_googleApiKey: string | undefined;
 
     /**
+     * Max size (in MB) accepted for a library import CSV (see ImportRoute.ts),
+     * configurable via MAX_IMPORT_FILE_SIZE_MB. Defaults to 10MB when unset
+     * or not a valid positive number.
+     * @private
+     */
+    private readonly m_maxImportFileSizeMb: number;
+
+    /**
      * Application constructor
      * Initializes environment variables, database, middleware, and logging
      */
@@ -186,6 +194,11 @@ export class AppService {
 
         this.m_googleApiKey = String(process.env.GOOGLE_BOOKS_API_KEY)
 
+        const parsedMaxImportFileSizeMb = Number(process.env.MAX_IMPORT_FILE_SIZE_MB);
+        this.m_maxImportFileSizeMb = Number.isFinite(parsedMaxImportFileSizeMb) && parsedMaxImportFileSizeMb > 0
+            ? parsedMaxImportFileSizeMb
+            : 10;
+
         this.m_server       = null;
 
         // Initialize logger
@@ -239,6 +252,11 @@ export class AppService {
         return this.m_googleApiKey;
     }
 
+    /** Max size (in MB) accepted for a library import CSV, see ImportRoute.ts and GET /app/policy. */
+    public getMaxImportFileSizeMb(): number {
+        return this.m_maxImportFileSizeMb;
+    }
+
     /** Get session expiration time */
     public getSessionTime(): number {
         return this.m_sessionTime;
@@ -282,7 +300,7 @@ export class AppService {
         this.m_app.use("/", AuthRoute);
 
         // Register all routes with API prefix
-        for (let route in routes) {
+        for (const route in routes) {
             const fullRoute = AppService.ROUTE_PREFIX + route;
             this.m_app.use(fullRoute, routes[route]);
             consoleRoutesArr.push(fullRoute)
