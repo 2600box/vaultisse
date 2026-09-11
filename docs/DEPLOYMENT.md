@@ -25,20 +25,41 @@ any real deployment.
 ## Prerequisites (all scenarios)
 
 - Docker Engine with the Compose plugin (`docker compose version` should work).
-- The two files this repo publishes for deployment:
+- The files this repo publishes for deployment — note `docker-compose.yml` mounts
+  the schema file by its relative path, so it must land at
+  `assets/db/databaseSchema.sql` next to the compose file, not just exist somewhere:
 
   ```bash
+  mkdir -p assets/db
   curl -O https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/docker-compose.yml
   curl -O https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/.env.example
+  curl -o assets/db/databaseSchema.sql https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/assets/db/databaseSchema.sql
   cp .env.example .env
   ```
 - A generated JWT secret: `openssl rand -hex 32` → `JWT_SECRET` in `.env`.
 - A real `DB_PASSWORD` in `.env` (not the example's blank value).
 - `ALLOW_DEV_AUTH=false` — always, in every scenario below. It bypasses login
-  entirely and exists only for local development without Docker.
+  entirely and exists only for local development without Docker. It has no effect
+  on registration — see [Creating the first user](#creating-the-first-user) below.
 
 Everything past this point is scenario-specific `.env` values and, for B, a small
 amount of host configuration outside of Docker.
+
+---
+
+## Creating the first user
+
+There's no separate admin setup step and no seeded default account. Once the `app`
+container is up (any scenario below), open `FRONT_END_URL` + `/register` (e.g.
+`https://your-domain.com/register`) and create an account the normal way — it's a
+plain, always-available page and works regardless of `ALLOW_DEV_AUTH`, which has
+nothing to do with registration and should stay `false` as noted above. There's no
+separate admin role; every account has the same access to the whole catalog.
+
+If `REGISTRATION_REQUIRES_APPROVAL=true` (see `.env.example`), the account is created
+disabled and can't log in until approved (see "Approving a new registration" under
+[Common operations](#common-operations-all-scenarios)) — for the first account on a
+fresh instance you almost always want this left `false`.
 
 ---
 
@@ -72,7 +93,8 @@ at most your home LAN — never the public internet.
    docker compose up -d
    ```
 
-4. Open `FRONT_END_URL` in a browser.
+4. Open `FRONT_END_URL` in a browser and go to `/register` to create your first
+   account (see [Creating the first user](#creating-the-first-user) above).
 
 Don't forward this port on your router. There's nothing else to configure — no
 reverse proxy, no certificate, no `cloudflared`.

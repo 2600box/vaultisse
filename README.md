@@ -219,9 +219,11 @@ createdb paperbooks
 psql -d paperbooks -f assets/db/databaseSchema.sql
 ```
 
-> There is no admin UI for the very first user — after loading the schema, either
-> insert a row into `users` directly, or start the server with `ALLOW_DEV_AUTH=true`
-> and use the `/register` page, then turn `ALLOW_DEV_AUTH` back off.
+> There is no admin UI for the very first user, and none is needed: `/register` is a
+> normal, always-available page regardless of `ALLOW_DEV_AUTH` (see `AuthRoute.ts`) —
+> after loading the schema, just start the server and register through it like any
+> other account. Inserting a row into `users` directly is only useful if you want to
+> skip that page entirely.
 
 The version-named files in `assets/db/upgrade/` (`1.0.0/1.sql`, `1.0.0/2.sql`,
 ...) are **not** for new installs — they're incremental upgrades for a
@@ -312,17 +314,26 @@ is no separate frontend container.
 To run it on a server with Docker installed:
 
 ```bash
+mkdir -p assets/db
 curl -O https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/docker-compose.yml
 curl -O https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/.env.example
+curl -o assets/db/databaseSchema.sql https://raw.githubusercontent.com/AlbertAmat/vaultisse/main/assets/db/databaseSchema.sql
 cp .env.example .env
 # edit .env: set JWT_SECRET, DB_PASSWORD, FRONT_END_URL, etc.
 docker compose up -d
 ```
 
 This starts two containers: `db` (PostgreSQL, seeded from
-`assets/db/databaseSchema.sql` on first run) and `app` (the image above). Pin `APP_TAG`
-in `.env` to a specific released version rather than `latest` if you want upgrades to
-be a deliberate step.
+`assets/db/databaseSchema.sql` — the file fetched above — on first run) and `app`
+(the image above). `docker-compose.yml` mounts that file by its relative path, so it
+must exist at `assets/db/databaseSchema.sql` next to the compose file, not just be
+present somewhere in the clone. Pin `APP_TAG` in `.env` to a specific released version
+rather than `latest` if you want upgrades to be a deliberate step.
+
+Once `app` is up, open `FRONT_END_URL` and go to `/register` to create your first
+account — it's a normal, always-available page, not gated by `ALLOW_DEV_AUTH` (which
+should stay `false`, see below). There's no separate admin role; every account has the
+same access.
 
 A few things worth knowing before pointing this at a real server:
 
