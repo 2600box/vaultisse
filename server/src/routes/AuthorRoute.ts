@@ -20,7 +20,7 @@ const router = Router();
  *
  * Example response (200): [{ "id": 4, "name": "J.R.R. Tolkien" }]
  */
-//@ts-ignore
+// @ts-ignore
 router.get('', requireAuth, async (req: Request, res: Response) => {
     const pool = appService.getDatabasePool();
     const client = await pool.connect();
@@ -28,7 +28,7 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
 
     try {
         const result = await client.query(`
-            SELECT id, 
+            SELECT id,
                    name
               FROM authors
                WHERE user_id = $1
@@ -52,7 +52,7 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
  *
  * Example response (200): [{ "id": 4, "name": "J.R.R. Tolkien" }]
  */
-//@ts-ignore
+// @ts-ignore
 router.post('/search', requireAuth, async (req: Request, res: Response) => {
     const query = req.body.query;
 
@@ -89,7 +89,7 @@ router.post('/search', requireAuth, async (req: Request, res: Response) => {
  *
  * Example response (200): { "id": 4, "name": "J.R.R. Tolkien" }
  */
-//@ts-ignore
+// @ts-ignore
 router.post('', requireAuth, async (req: Request, res: Response) => {
     const name = req.body.name;
 
@@ -132,7 +132,7 @@ router.post('', requireAuth, async (req: Request, res: Response) => {
  *
  * Example response (200): { "id": 4, "name": "..." }
  */
-//@ts-ignore
+// @ts-ignore
 router.put('/:id', requireAuth, async (req: Request, res: Response) => {
     const authorId = req.params.id;
     if (!authorId) {
@@ -185,7 +185,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
  *
  * Responses: 200 {"message": "Author deleted successfully"} | 404 {"error": "Author not found"}.
  */
-//@ts-ignore
+// @ts-ignore
 router.delete('/:id', requireAuth, async (req: Request, res: Response) => {
     const id = Number(req.params.id);
     appService.getLogger().debug(`Delete author, id: ${id}`);
