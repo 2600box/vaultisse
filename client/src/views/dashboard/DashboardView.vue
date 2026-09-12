@@ -108,7 +108,7 @@
 				</div>
 			</div>
 
-			<div class="mt-3">
+			<div v-if="leasingEnabled" class="mt-3">
 				<dashboard-card
 					:title="t(AppLabels.DASHBOARD_ON_LOAN)"
 					:counter="controller.getTotalBookedBooks()"
@@ -271,6 +271,7 @@ import router from "@/router/Router";
 import {searchRoute} from "@/router/routes/SearchRoute";
 import {loansRoute} from "@/router/routes/LoansRoute";
 import {SearchFilter} from "@/types/search/SearchFilter";
+import {applicationService} from "@/service/ApplicationService";
 //@ts-ignore
 import notFound from "@/assets/images/notFound.jpg";
 
@@ -293,6 +294,8 @@ function onCoverError(event: Event) {
 }
 
 const upBooksTrend = computed(() => controller.getTotalThisMonth() > controller.getTotalLastMonth())
+
+const leasingEnabled = computed(() => applicationService.getUser().isLeasingEnabled());
 
 const categoryShelvesWithBooks = computed(() => controller.getCategoryShelves().filter(shelf => shelf.books.length > 1))
 </script>
