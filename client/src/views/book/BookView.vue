@@ -5,7 +5,8 @@
 				<template v-slot:activator="{ props: readingStatusMenuProps }">
 					<v-btn
 						v-bind="readingStatusMenuProps"
-						variant="text"
+						variant="outlined"
+						rounded="pill"
 						density="comfortable"
 						class="text-none mr-2"
 						:prepend-icon="readingStatusIcon"
@@ -39,7 +40,8 @@
 			</v-menu>
 
 			<v-btn
-				variant="text"
+				variant="outlined"
+				rounded="circle"
 				density="comfortable"
 				icon
 				class="text-none mr-2"
@@ -56,6 +58,7 @@
 				<v-btn
 					class="text-none mr-2"
 					variant="text"
+					rounded="pill"
 					@click="cancelEditing()"
 					:disabled="loadingUpdate"
 					small
@@ -65,6 +68,7 @@
 				<v-btn
 					class="text-none"
 					color="primary"
+					rounded="pill"
 					:disabled="!hasChanges"
 					@click="updateBook()"
 					:loading="loadingUpdate"
@@ -80,6 +84,7 @@
 				class="text-none"
 				color="primary"
 				variant="elevated"
+				rounded="pill"
 				small
 				prepend-icon="mdi-pencil-outline"
 				@click="startEditing()"
@@ -90,245 +95,241 @@
 
 		<template v-slot:default>
 			<div style="height: 100%;">
-				<v-row no-gutters class="mb-4">
-					<v-col class="px-1" order="2" order-md="1">
-						<!-- ================================================================== -->
-						<!-- BOOK														-->
-						<!-- ================================================================== -->
-						<card-component
-							:title="t(AppLabels.BOOK)"
-							icon="mdi-book"
-							dense
-						>
-							<template v-slot:default>
-								<!-- ============================================== -->
-								<!-- VIEW MODE									-->
-								<!-- ============================================== -->
-								<div v-if="!editing" class="pb-book-view pt-2">
-									<h2 class="pb-display pb-book-view-title">{{ name || t(AppLabels.NAME) }}</h2>
-									<div v-if="isbn" class="pb-mono pb-book-view-isbn">ISBN {{ isbn }}</div>
+				<!-- ================================================================== -->
+				<!-- BOOK														-->
+				<!-- ================================================================== -->
+				<card-component
+					:title="t(AppLabels.BOOK)"
+					icon="mdi-book"
+					dense
+					class="mb-4 pb-hero-card"
+				>
+					<template v-slot:default>
+						<!-- ============================================== -->
+						<!-- VIEW MODE									-->
+						<!-- ============================================== -->
+						<div v-if="!editing" class="pb-hero pt-2">
+							<book-image :book="model.getBook()"/>
 
-									<div class="pb-book-view-grid">
-										<div class="pb-book-view-field">
-											<div class="pb-eyebrow">{{t(AppLabels.CATEGORY)}}</div>
-											<div class="pb-book-view-value">{{ categoryName || emptyValue }}</div>
-										</div>
-										<div class="pb-book-view-field">
-											<div class="pb-eyebrow">{{t(AppLabels.LANGUAGE)}}</div>
-											<div class="pb-book-view-value">{{ languageName || emptyValue }}</div>
-										</div>
-										<div class="pb-book-view-field">
-											<div class="pb-eyebrow">{{t(AppLabels.FORMAT)}}</div>
-											<div class="pb-book-view-value">{{ formatName || emptyValue }}</div>
-										</div>
-										<div class="pb-book-view-field">
-											<div class="pb-eyebrow">{{t(AppLabels.PAGES)}}</div>
-											<div class="pb-book-view-value">{{ pages || emptyValue }}</div>
-										</div>
-										<div class="pb-book-view-field">
-											<div class="pb-eyebrow">{{t(AppLabels.PUBLISHER)}}</div>
-											<div class="pb-book-view-value">{{ publisher || emptyValue }}</div>
-										</div>
-										<div class="pb-book-view-field">
-											<div class="pb-eyebrow">{{t(AppLabels.PUBLISHED_DATE)}}</div>
-											<div class="pb-book-view-value">{{ publishedDateDisplay || emptyValue }}</div>
-										</div>
-										<div class="pb-book-view-field">
-											<div class="pb-eyebrow">{{t(AppLabels.READING_STATUS)}}</div>
-											<div class="pb-book-view-value">{{ readingStatusName || emptyValue }}</div>
-										</div>
+							<div class="pb-hero-main">
+								<h2 class="pb-display pb-book-view-title">{{ name || t(AppLabels.NAME) }}</h2>
+
+								<div v-if="authors.length" class="pb-book-view-authors">
+									<v-chip v-for="author in authors" :key="author.value" density="comfortable" variant="outlined" size="small">
+										{{ author.text }}
+									</v-chip>
+								</div>
+
+								<span v-if="isbn" class="pb-mono pb-book-view-isbn">ISBN {{ isbn }}</span>
+
+								<div class="pb-book-view-grid">
+									<div class="pb-book-view-field">
+										<div class="pb-eyebrow">{{t(AppLabels.CATEGORY)}}</div>
+										<div class="pb-book-view-value">{{ categoryName || emptyValue }}</div>
 									</div>
-
-									<div class="pb-book-view-field mt-3">
-										<div class="pb-eyebrow">{{t(AppLabels.AUTHORS)}}</div>
-										<div v-if="authors.length" class="d-flex flex-wrap ga-1 mt-1">
-											<v-chip v-for="author in authors" :key="author.value" density="comfortable" variant="outlined">
-												{{ author.text }}
-											</v-chip>
-										</div>
-										<div v-else class="pb-book-view-value">{{ emptyValue }}</div>
+									<div class="pb-book-view-field">
+										<div class="pb-eyebrow">{{t(AppLabels.LANGUAGE)}}</div>
+										<div class="pb-book-view-value">{{ languageName || emptyValue }}</div>
 									</div>
-
-									<div v-if="description" class="pb-book-view-field mt-3">
-										<div class="pb-eyebrow">{{t(AppLabels.DESCRIPTION)}}</div>
-										<p class="pb-book-view-description">{{ description }}</p>
+									<div class="pb-book-view-field">
+										<div class="pb-eyebrow">{{t(AppLabels.FORMAT)}}</div>
+										<div class="pb-book-view-value">{{ formatName || emptyValue }}</div>
+									</div>
+									<div class="pb-book-view-field">
+										<div class="pb-eyebrow">{{t(AppLabels.PAGES)}}</div>
+										<div class="pb-book-view-value">{{ pages || emptyValue }}</div>
+									</div>
+									<div class="pb-book-view-field">
+										<div class="pb-eyebrow">{{t(AppLabels.PUBLISHER)}}</div>
+										<div class="pb-book-view-value">{{ publisher || emptyValue }}</div>
+									</div>
+									<div class="pb-book-view-field">
+										<div class="pb-eyebrow">{{t(AppLabels.PUBLISHED_DATE)}}</div>
+										<div class="pb-book-view-value">{{ publishedDateDisplay || emptyValue }}</div>
+									</div>
+									<div class="pb-book-view-field">
+										<div class="pb-eyebrow">{{t(AppLabels.READING_STATUS)}}</div>
+										<div class="pb-book-view-value pb-book-view-status">
+											<v-icon v-if="readingStatusName" size="16" color="primary">{{ readingStatusIcon }}</v-icon>
+											{{ readingStatusName || emptyValue }}
+										</div>
 									</div>
 								</div>
 
-								<!-- ============================================== -->
-								<!-- EDIT MODE									-->
-								<!-- ============================================== -->
-								<div v-else class="pt-2">
-									<div class="d-flex">
-										<!-- Name -->
-										<v-text-field
-											v-model="name"
-											:disabled="disableFields"
-											:label="t(AppLabels.NAME)"
-											density="compact"
-											variant="outlined"
-											class="mr-1"
-										></v-text-field>
+								<p v-if="description" class="pb-book-view-description">{{ description }}</p>
+							</div>
+						</div>
 
-										<!-- ISBN code -->
-										<v-text-field
-											v-model="isbn"
-											:disabled="disableFields"
-											label="ISBN"
-											density="compact"
-											variant="outlined"
-											class="ml-1"
-										></v-text-field>
-									</div>
+						<!-- ============================================== -->
+						<!-- EDIT MODE									-->
+						<!-- ============================================== -->
+						<div v-else class="pb-hero pt-2">
+							<book-image :book="model.getBook()"/>
 
-									<div class="d-flex">
-										<!-- Category -->
-										<v-select
-											v-model="category"
-											:disabled="disableFields"
-											:items="categoriesJson()"
-											:label="t(AppLabels.CATEGORY)"
-											density="compact"
-											variant="outlined"
-											item-value="value"
-											item-title="text"
-											clearable
-											class="mr-1"
-											style="width: 50%"
-										></v-select>
-
-										<!-- Language -->
-										<v-select
-											v-model="language"
-											:disabled="disableFields"
-											:items="languagesJson()"
-											:label="t(AppLabels.LANGUAGE)"
-											density="compact"
-											variant="outlined"
-											item-value="value"
-											item-title="text"
-											clearable
-											class="ml-1"
-											style="width: 50%"
-										></v-select>
-									</div>
-
-									<div class="d-flex">
-										<!-- Format -->
-										<v-select
-											v-model="format"
-											:disabled="disableFields"
-											:items="formatsJson()"
-											:label="t(AppLabels.FORMAT)"
-											density="compact"
-											variant="outlined"
-											item-value="value"
-											item-title="text"
-											clearable
-											class="mr-1"
-											style="width: 50%"
-										></v-select>
-
-										<!-- Pages -->
-										<v-text-field
-											v-model="pages"
-											:disabled="disableFields"
-											:label="t(AppLabels.PAGES)"
-											type="number"
-											density="compact"
-											variant="outlined"
-											class="ml-1"
-											style="width: 50%"
-										></v-text-field>
-									</div>
-
-									<!-- Reading status -->
-									<v-select
-										v-model="readingStatus"
+							<div class="pb-hero-main">
+								<div class="d-flex">
+									<!-- Name -->
+									<v-text-field
+										v-model="name"
 										:disabled="disableFields"
-										:items="readingStatusJson()"
-										:label="t(AppLabels.READING_STATUS)"
+										:label="t(AppLabels.NAME)"
+										density="compact"
+										variant="outlined"
+										class="mr-1"
+									></v-text-field>
+
+									<!-- ISBN code -->
+									<v-text-field
+										v-model="isbn"
+										:disabled="disableFields"
+										label="ISBN"
+										density="compact"
+										variant="outlined"
+										class="ml-1"
+									></v-text-field>
+								</div>
+
+								<div class="d-flex">
+									<!-- Category -->
+									<v-select
+										v-model="category"
+										:disabled="disableFields"
+										:items="categoriesJson()"
+										:label="t(AppLabels.CATEGORY)"
 										density="compact"
 										variant="outlined"
 										item-value="value"
 										item-title="text"
 										clearable
+										class="mr-1"
+										style="width: 50%"
 									></v-select>
 
-									<!-- Authors -->
-									<v-autocomplete
-										v-model="authors"
-										:items="loadedAuthorsJSON"
-										:loading="loadingAuthors"
-										@update:search="searchAuthors"
+									<!-- Language -->
+									<v-select
+										v-model="language"
 										:disabled="disableFields"
+										:items="languagesJson()"
+										:label="t(AppLabels.LANGUAGE)"
 										density="compact"
 										variant="outlined"
 										item-value="value"
 										item-title="text"
-										:label="t(AppLabels.AUTHORS)"
-										color="primary"
-										:placeholder="t(AppLabels.ADD_AUTHOR)"
-										dense
-										multiple
-									></v-autocomplete>
+										clearable
+										class="ml-1"
+										style="width: 50%"
+									></v-select>
+								</div>
 
-									<div class="d-flex">
-										<!-- Publisher -->
-										<v-text-field
-											v-model="publisher"
-											:label="t(AppLabels.PUBLISHER)"
-											:disabled="disableFields"
-											density="compact"
-											variant="outlined"
-											class="mr-1"
-											style="width: 50%"
-										></v-text-field>
+								<div class="d-flex">
+									<!-- Format -->
+									<v-select
+										v-model="format"
+										:disabled="disableFields"
+										:items="formatsJson()"
+										:label="t(AppLabels.FORMAT)"
+										density="compact"
+										variant="outlined"
+										item-value="value"
+										item-title="text"
+										clearable
+										class="mr-1"
+										style="width: 50%"
+									></v-select>
 
-										<!-- Published date -->
-										<v-text-field
-											v-model="publishedDate"
-											:label="t(AppLabels.PUBLISHED_DATE)"
-											:disabled="disableFields"
-											type="date"
-											density="compact"
-											variant="outlined"
-											class="ml-1"
-											style="width: 50%"
-										></v-text-field>
-									</div>
+									<!-- Pages -->
+									<v-text-field
+										v-model="pages"
+										:disabled="disableFields"
+										:label="t(AppLabels.PAGES)"
+										type="number"
+										density="compact"
+										variant="outlined"
+										class="ml-1"
+										style="width: 50%"
+									></v-text-field>
+								</div>
 
-									<!-- Description -->
-									<v-textarea
-										v-model="description"
+								<!-- Reading status -->
+								<v-select
+									v-model="readingStatus"
+									:disabled="disableFields"
+									:items="readingStatusJson()"
+									:label="t(AppLabels.READING_STATUS)"
+									density="compact"
+									variant="outlined"
+									item-value="value"
+									item-title="text"
+									clearable
+								></v-select>
+
+								<!-- Authors -->
+								<v-autocomplete
+									v-model="authors"
+									:items="loadedAuthorsJSON"
+									:loading="loadingAuthors"
+									@update:search="searchAuthors"
+									:disabled="disableFields"
+									density="compact"
+									variant="outlined"
+									item-value="value"
+									item-title="text"
+									:label="t(AppLabels.AUTHORS)"
+									color="primary"
+									:placeholder="t(AppLabels.ADD_AUTHOR)"
+									dense
+									multiple
+								></v-autocomplete>
+
+								<div class="d-flex">
+									<!-- Publisher -->
+									<v-text-field
+										v-model="publisher"
+										:label="t(AppLabels.PUBLISHER)"
 										:disabled="disableFields"
 										density="compact"
 										variant="outlined"
-										:label="t(AppLabels.DESCRIPTION)"
-									></v-textarea>
+										class="mr-1"
+										style="width: 50%"
+									></v-text-field>
+
+									<!-- Published date -->
+									<v-text-field
+										v-model="publishedDate"
+										:label="t(AppLabels.PUBLISHED_DATE)"
+										:disabled="disableFields"
+										type="date"
+										density="compact"
+										variant="outlined"
+										class="ml-1"
+										style="width: 50%"
+									></v-text-field>
 								</div>
-							</template>
-						</card-component>
-					</v-col>
 
-					<v-col cols="12" md="3" lg="3" class="px-1" order="1" order-md="2">
-						<book-image :book="model.getBook()"/>
-					</v-col>
-				</v-row>
+								<!-- Description -->
+								<v-textarea
+									v-model="description"
+									:disabled="disableFields"
+									density="compact"
+									variant="outlined"
+									:label="t(AppLabels.DESCRIPTION)"
+								></v-textarea>
+							</div>
+						</div>
+					</template>
+				</card-component>
 
 				<!-- ================================================================== -->
-				<!-- EBOOK FILE															-->
+				<!-- EBOOK FILE + STOCKS													-->
 				<!-- ================================================================== -->
-				<v-row v-if="model.getBook().isElectronic()" no-gutters class="mb-4">
-					<v-col class="px-1">
+				<v-row no-gutters class="pb-secondary-row">
+					<v-col cols="12" :md="model.getBook().isElectronic() ? 8 : 12" class="px-1 mb-4">
+						<book-stocks :book="model.getBook()"/>
+					</v-col>
+					<v-col v-if="model.getBook().isElectronic()" cols="12" md="4" class="px-1 mb-4">
 						<book-file :book="model.getBook()"/>
 					</v-col>
 				</v-row>
-
-				<!-- ================================================================== -->
-				<!-- STOCKS																-->
-				<!-- ================================================================== -->
-				<book-stocks :book="model.getBook()"/>
 			</div>
 		</template>
 	</page-component>
@@ -750,6 +751,37 @@ async function searchAuthors(prompt: string) {
 </script>
 
 <style scoped lang="scss">
+.pb-hero-card {
+	:deep(.v-card-text) {
+		padding-left: 28px;
+		padding-right: 28px;
+		padding-bottom: 28px;
+	}
+
+	@media (max-width: 600px) {
+		:deep(.v-card-text) {
+			padding-left: 16px;
+			padding-right: 16px;
+			padding-bottom: 16px;
+		}
+	}
+}
+
+.pb-hero {
+	display: grid;
+	grid-template-columns: 220px 1fr;
+	gap: 32px;
+	align-items: start;
+
+	@media (max-width: 640px) {
+		grid-template-columns: 1fr;
+	}
+}
+
+.pb-hero-main {
+	min-width: 0;
+}
+
 .pb-book-view-title {
 	font-size: 26px;
 	font-weight: 600;
@@ -757,14 +789,28 @@ async function searchAuthors(prompt: string) {
 	line-height: 1.2;
 }
 
+.pb-book-view-authors {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 10px;
+}
+
 .pb-book-view-isbn {
-	margin-top: 4px;
-	font-size: 13px;
+	display: inline-flex;
+	margin-top: 14px;
+	font-size: 12px;
 	color: var(--pb-text-muted);
+	background: var(--pb-surface-alt);
+	border: 1px solid var(--pb-border);
+	padding: 3px 10px;
+	border-radius: 999px;
 }
 
 .pb-book-view-grid {
-	margin-top: 20px;
+	margin-top: 22px;
+	padding-top: 20px;
+	border-top: 1px solid var(--pb-border);
 	display: grid;
 	grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 	gap: 16px 24px;
@@ -776,11 +822,18 @@ async function searchAuthors(prompt: string) {
 	color: var(--pb-text);
 }
 
+.pb-book-view-status {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+
 .pb-book-view-description {
-	margin: 4px 0 0;
+	margin: 22px 0 0;
 	font-size: 14px;
 	line-height: 1.6;
 	color: var(--pb-text);
 	white-space: pre-wrap;
+	max-width: 70ch;
 }
 </style>
