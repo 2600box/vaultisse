@@ -447,7 +447,8 @@ router.post("/password", requireAuth, passwordChangeLimiter, async (req: Request
  * session whose JWT simply expired without an explicit logout naturally
  * drops off instead of lingering forever.
  *
- * Auth: required.
+ * Auth: required. In DEMO_MODE, always returns [] rather than real
+ * session/IP data for the demo account.
  *
  * Example response (200):
  *  [{ "id": 12, "userAgent": "Mozilla/5.0 (...) Chrome/128.0", "ipAddress": "203.0.113.4",
@@ -455,6 +456,10 @@ router.post("/password", requireAuth, passwordChangeLimiter, async (req: Request
  *     "isCurrent": true }]
  */
 router.get("/sessions", requireAuth, async (req: Request, res: Response) => {
+    if (process.env.DEMO_MODE === "true") {
+        return res.status(200).json([]);
+    }
+
     const pool = appService.getDatabasePool();
     const userId = appService.getSessionUser(req);
 
@@ -540,13 +545,19 @@ router.delete("/sessions/:id", requireAuth, async (req: Request, res: Response) 
  * generic and may later carry data-change events (books, loans, ...) too,
  * which this endpoint deliberately excludes.
  *
- * Auth: required. Query: `?limit=20` (default 20, capped at 50).
+ * Auth: required. Query: `?limit=20` (default 20, capped at 50). In
+ * DEMO_MODE, always returns [] rather than real login/IP history for the
+ * demo account.
  *
  * Example response (200):
  *  [{ "id": 42, "action": "login", "metadata": {"ip": "203.0.113.4"},
  *     "createdDate": "2026-09-03T18:05:00.000Z" }]
  */
 router.get("/activity", requireAuth, async (req: Request, res: Response) => {
+    if (process.env.DEMO_MODE === "true") {
+        return res.status(200).json([]);
+    }
+
     const pool = appService.getDatabasePool();
     const userId = appService.getSessionUser(req);
     const limit = Math.min(Number(req.query.limit) || 20, 50);
