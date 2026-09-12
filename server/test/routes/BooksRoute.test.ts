@@ -1,4 +1,5 @@
 import axios from "axios";
+import {appService} from "../../src/AppService";
 import {setupTestApp} from "../helpers/testApp";
 import {createAuthenticatedUser, ITestUser} from "../helpers/auth";
 
@@ -258,6 +259,52 @@ describe("POST /book/isbn/:isbn (external metadata lookup)", () => {
         const getRes = await user.agent.get(`/api/rest/book/${id}`);
         expect(getRes.body).toMatchObject({name: "Mocked Book Title", publisher: "Mock Publisher", pages: 123});
         expect(getRes.body.authors).toEqual([{id: expect.any(Number), name: "Mock Author"}]);
+    });
+
+    it("retries a transient Google Books 503 before falling back", async () => {
+        const apiKeySpy = jest.spyOn(appService, "getGoogleApiKey").mockReturnValue("test-key");
+        mockedAxios.isAxiosError.mockImplementation((error: any) => Boolean(error?.isAxiosError));
+
+        try {
+            mockedAxios.get
+                .mockRejectedValueOnce({
+                    isAxiosError: true,
+                    response: {status: 503},
+                    request: {},
+                })
+                .mockResolvedValueOnce({
+                    data: {
+                        items: [{
+                            volumeInfo: {
+                                title: "Recovered Google Book",
+                                authors: ["Google Author"],
+                                publisher: "Google Publisher",
+                                publishedDate: "2024",
+                                pageCount: 321,
+                                language: "en",
+                                imageLinks: {thumbnail: "https://books.google.com/books/content?id=test"},
+                            },
+                        }],
+                    },
+                });
+
+            const res = await user.agent.post("/api/rest/book/isbn/9780306406157");
+            expect(res.status).toBe(200);
+            expect(mockedAxios.get).toHaveBeenCalledTimes(2);
+            expect(mockedAxios.get.mock.calls.every(([url]) =>
+                String(url).includes("googleapis.com/books/v1/volumes")
+            )).toBe(true);
+
+            const getRes = await user.agent.get(`/api/rest/book/${res.body}`);
+            expect(getRes.body).toMatchObject({
+                name: "Recovered Google Book",
+                publisher: "Google Publisher",
+                image_url: "https://books.google.com/books/content?id=test",
+            });
+        } finally {
+            apiKeySpy.mockRestore();
+            mockedAxios.isAxiosError.mockReset();
+        }
     });
 
     it("reuses the existing book on a second lookup of the same ISBN (find-or-create)", async () => {

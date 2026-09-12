@@ -1100,11 +1100,13 @@ router.post(
  * =========================================================
  */
 /**
- * Fetch volume metadata for `isbn` from the Google Books API, retrying up to
- * `retries` times with linear backoff on HTTP 429 (rate limited). If the
- * request ultimately fails for any other reason (missing API key, network
- * error, no match), falls back to `__fetchOpenLibraryMetadata`.
+ * Fetch volume metadata for `isbn` from the Google Books API. Transient
+ * HTTP failures and request-level network failures are retried up to three
+ * times with exponential backoff (1s, 2s, 4s) before falling back to Open
+ * Library. Permanent 4xx responses are not retried, except 408/429.
  */
+const GOOGLE_BOOKS_RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504]);
+
 async function fetchBookData(isbn: string, retries = 3): Promise<any> {
     try {
         const apiKey = appService.getGoogleApiKey();
@@ -1128,16 +1130,25 @@ async function fetchBookData(isbn: string, retries = 3): Promise<any> {
 
         return data?.items?.[0]?.volumeInfo ?? null;
     } catch (error: unknown) {
-        if (
-            axios.isAxiosError(error) &&
-            error.response?.status === 429 &&
-            retries > 0
-        ) {
-            const delay = (4 - retries) * 1000;
+        if (axios.isAxiosError(error) && retries > 0) {
+            const status = error.response?.status;
+            const retryable = status === undefined
+                ? Boolean(error.request)
+                : GOOGLE_BOOKS_RETRYABLE_STATUS_CODES.has(status);
 
-            await new Promise(r => setTimeout(r, delay));
+            if (retryable) {
+                const retryNumber = 4 - retries;
+                const delay = Math.pow(2, retryNumber - 1) * 1000;
+                const reason = status !== undefined ? `HTTP ${status}` : (error.code ?? 'network error');
 
-            return fetchBookData(isbn, retries - 1);
+                console.warn(
+                    `Google Books request failed (${reason}); retrying in ${delay}ms ` +
+                    `(${retryNumber}/3)`
+                );
+
+                await new Promise(r => setTimeout(r, delay));
+                return fetchBookData(isbn, retries - 1);
+            }
         }
 
         console.warn('Google Books failed, trying fallback...', error);
