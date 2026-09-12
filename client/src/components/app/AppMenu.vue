@@ -94,6 +94,7 @@
 				</v-list-item>
 
 				<v-list-item
+					v-if="leasingEnabled"
 					:to="searchRoute.getPathForFilter(SearchFilter.ON_LOAN)"
 					:active="isLibraryOnLoanActive"
 					:title="t(AppLabels.ON_LOAN_FILTER)"

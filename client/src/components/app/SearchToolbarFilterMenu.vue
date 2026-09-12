@@ -116,12 +116,14 @@ const categoryOptions = computed(() => [
 /** Staged filter selection, used only while there's no live `activeSearchController` (see file doc). */
 const pendingFilters: Ref<SearchFilter[]> = ref([]);
 
-const filterOptions = [
+const filterOptions = computed(() => [
 	{title: t(AppLabels.NO_STOCK_FILTER), value: SearchFilter.NO_STOCK},
 	{title: t(AppLabels.HAS_STOCK_FILTER), value: SearchFilter.HAS_STOCK},
-	{title: t(AppLabels.ON_LOAN_FILTER), value: SearchFilter.ON_LOAN},
+	...(applicationService.getUser().isLeasingEnabled() ? [
+		{title: t(AppLabels.ON_LOAN_FILTER), value: SearchFilter.ON_LOAN}
+	] : []),
 	{title: t(AppLabels.RECENT_FILTER), value: SearchFilter.RECENT}
-];
+]);
 
 const hasActiveFilters = computed(() => {
 	if (activeSearchController.value) {

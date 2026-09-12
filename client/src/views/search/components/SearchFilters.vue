@@ -52,7 +52,7 @@ const props = defineProps<Props>();
 
 const {t} = useI18n();
 
-const filters = [
+const filters = computed(() => [
 	{
 		title: t(AppLabels.NO_STOCK_FILTER),
 		value: SearchFilter.NO_STOCK
@@ -61,19 +61,21 @@ const filters = [
 		title: t(AppLabels.HAS_STOCK_FILTER),
 		value: SearchFilter.HAS_STOCK
 	},
-	{
-		title: t(AppLabels.ON_LOAN_FILTER),
-		value: SearchFilter.ON_LOAN
-	},
+	...(applicationService.getUser().isLeasingEnabled() ? [
+		{
+			title: t(AppLabels.ON_LOAN_FILTER),
+			value: SearchFilter.ON_LOAN
+		}
+	] : []),
 	{
 		title: t(AppLabels.RECENT_FILTER),
 		value: SearchFilter.RECENT
 	}
-]
+])
 
 const selectedFilters = computed(() => {
 	return props.model.getFilters().map((filterValue) => {
-		return filters.find((filter) => filter.value == filterValue) as Record<string, any>
+		return filters.value.find((filter) => filter.value == filterValue) as Record<string, any>
 	})
 })
 
