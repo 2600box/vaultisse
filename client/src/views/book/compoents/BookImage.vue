@@ -10,10 +10,11 @@
 				@click="triggerFileSelect"
 			>
 				<v-img
+					v-if="hasImage"
 					cover
 					:aspect-ratio="2 / 3"
-					:src="showFallbackImage ? notFound : book.getImageUrl()"
-					@error="showFallbackImage = true"
+					:src="book.getImageUrl()!"
+					@error="imageLoadFailed = true"
 				>
 					<v-expand-transition>
 						<div
@@ -34,6 +35,26 @@
 						</div>
 					</v-expand-transition>
 				</v-img>
+
+				<!-- No cover set (or it failed to load): a clear, clickable dropzone instead of a near-invisible placeholder image -->
+				<div
+					v-else
+					class="book-image-empty"
+					:class="{ 'book-image-empty-hover': isHovering }"
+				>
+					<v-progress-circular
+						v-if="loading"
+						color="primary"
+						size="40"
+						indeterminate
+					/>
+
+					<template v-else>
+						<v-icon size="36" color="primary">mdi-book-outline</v-icon>
+						<span class="book-image-empty-label">{{t(AppLabels.IMAGE_DRAG_AND_DROP)}}</span>
+					</template>
+				</div>
+
 				<!-- Hidden file input for click selection -->
 				<input
 					ref="fileInput"
@@ -51,12 +72,11 @@
 <script setup lang="ts">
 /**
  * Book cover on the book detail view: click or drag-and-drop an image
- * to replace it (via `Book.changeImage`); falls back to a placeholder
- * image if there's no cover or it fails to load.
+ * to replace it (via `Book.changeImage`); shows a dashed dropzone in
+ * place of the cover when there's no image set or it fails to load.
  */
 import Book from "@/model/book/Book";
-import notFound from "@/assets/images/notFound.jpg";
-import { ref, Ref } from "vue";
+import {computed, ref, Ref} from "vue";
 import {useI18n} from "vue-i18n";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 
@@ -70,7 +90,10 @@ const props = defineProps<Props>();
 
 const loading: Ref<boolean> = ref(false);
 
-const showFallbackImage: Ref<boolean> = ref(false);
+/** Set when the current cover URL fails to load; reset on every new upload attempt. */
+const imageLoadFailed: Ref<boolean> = ref(false);
+
+const hasImage = computed(() => !!props.book.getImageUrl() && !imageLoadFailed.value);
 
 const fileInput = ref<HTMLInputElement | null>(null);
 
@@ -99,6 +122,7 @@ const handleDrop = (event: DragEvent) => {
 async function loadImage(file: File) {
 	try {
 		loading.value = true;
+		imageLoadFailed.value = false;
 		await props.book.changeImage(file);
 	} finally {
 		loading.value = false;
@@ -130,5 +154,31 @@ async function loadImage(file: File) {
 	color: white;
 	cursor: pointer;
 	background-color: rgba(var(--v-theme-primary), 0.92);
+}
+
+.book-image-empty {
+	aspect-ratio: 2 / 3;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	padding: 16px;
+	text-align: center;
+	color: var(--pb-text-muted);
+	background: var(--pb-surface-alt);
+	border: 1px dashed var(--pb-border-strong);
+	border-radius: var(--pb-radius);
+	cursor: pointer;
+}
+
+.book-image-empty-hover {
+	border-color: rgb(var(--v-theme-primary));
+	background-color: rgba(var(--v-theme-primary), 0.08);
+}
+
+.book-image-empty-label {
+	font-size: 13px;
+	font-weight: 500;
 }
 </style>
