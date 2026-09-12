@@ -4,6 +4,8 @@
  * database. Keeping this shared and origin-agnostic is what lets the route
  * stay the same as more origins are added - only a new parser is needed.
  */
+import {ReadingStatusEnum} from "../../../types/book/IReadingStatus";
+
 export interface IImportedBook {
     /** Row's 1-based position in the source file, for error reporting. */
     row: number;
@@ -28,4 +30,6 @@ export interface IImportedBook {
      * `null`/omitted falls back to an ISBN-based Open Library cover lookup.
      */
     imageUrl?: string | null;
+    /** The user's personal reading progress for this book (Goodreads' "Exclusive Shelf"), or null/omitted if untracked. */
+    readingStatus?: ReadingStatusEnum | null;
 }

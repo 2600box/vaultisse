@@ -137,7 +137,10 @@ router.get('/template/:origin', requireAuth, (req: Request, res: Response) => {
  * Each row is inserted independently (its own transaction) - a bad row is
  * skipped and reported rather than failing the whole file. A row whose ISBN
  * (or, lacking one, title) already exists for this user is skipped as a
- * likely duplicate, so re-uploading the same export twice is harmless.
+ * likely duplicate, so re-uploading the same export twice is harmless. If the
+ * parser reports a `readingStatus` (Goodreads' "Exclusive Shelf", or the
+ * Vaultisse template's "Reading Status" column), it's stored as `books.reading_status`
+ * so the imported book lands directly on the matching Library nav filter.
  *
  * Example request (curl):
  *   curl -X POST /api/rest/import/library -F "origin=goodreads" -F "file=@goodreads_library_export.csv"
@@ -215,8 +218,8 @@ router.post('/library', requireAuth, uploadCsv, handleImportUploadError, async (
                 const imageUrl = explicitImageUrl ?? (book.isbn ? await __fetchOpenLibraryCover(book.isbn) : null);
 
                 const insertBook = await client.query(
-                    `INSERT INTO books (name, description, image_url, isbn, category_id, format_id, publisher, published_date, language_code, pages, user_id)
-                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                    `INSERT INTO books (name, description, image_url, isbn, category_id, format_id, publisher, published_date, language_code, pages, reading_status, user_id)
+                     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
                      RETURNING id`,
                     [
                         truncate(book.name, 255),
@@ -229,6 +232,7 @@ router.post('/library', requireAuth, uploadCsv, handleImportUploadError, async (
                         book.publishedDate,
                         book.languageCode ?? null,
                         book.pages,
+                        book.readingStatus ?? null,
                         userId
                     ]
                 );

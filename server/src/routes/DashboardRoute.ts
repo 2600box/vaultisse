@@ -8,6 +8,7 @@
 import { Router, Request, Response } from 'express';
 import {appService} from "../AppService";
 import {requireAuth} from "../middlewares/AuthMiddleware";
+import {ReadingStatusEnum} from "../types/book/IReadingStatus";
 
 const router = Router();
 
@@ -36,7 +37,10 @@ const router = Router();
  *    "categoryShelves": [{ "id": 3, "name": "Fantasy", "count": 10,
  *                          "books": [{ "id": 12, "name": "The Hobbit", "image_url": "..." }] }],
  *    "currentlyOnLoan": [{ "bookId": 12, "bookName": "The Hobbit", "imageUrl": "...",
- *                          "customerId": 4, "customerName": "Maria Puig" }]
+ *                          "customerId": 4, "customerName": "Maria Puig" }],
+ *    "wantToRead": [{ "id": 12, "name": "The Hobbit", "image_url": "...", "isbn": "9780261102217" }],
+ *    "currentlyReading": [{ "id": 12, "name": "The Hobbit", "image_url": "...", "isbn": "9780261102217" }],
+ *    "totalRead": 12
  *  }
  *
  * Note: Postgres `COUNT(*)` yields a `bigint`, which node-postgres
@@ -64,7 +68,10 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
             totalLocations,
             totalAuthors,
             categoryShelfRows,
-            currentlyOnLoan
+            currentlyOnLoan,
+            wantToRead,
+            currentlyReading,
+            totalRead
         ] = await Promise.all([
             pool.query(`
                     SELECT b.id,
@@ -127,7 +134,28 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
                       AND bs.status = 2
                     ORDER BY bs.id DESC
                         LIMIT 5
-            `, [userId])
+            `, [userId]),
+            // "Want to read" / "currently reading" shelves for the dashboard's
+            // reading widgets, and a simple finished-books counter - all
+            // backed by the same `books.reading_status` the Library nav's
+            // quick filters use (see BooksRoute.ts's SearchFilter handling).
+            pool.query(`
+                    SELECT b.id, b.name, b.image_url, b.isbn
+                    FROM books b
+                    WHERE b.user_id = $1
+                      AND b.reading_status = ${ReadingStatusEnum.WANT_TO_READ}
+                    ORDER BY b.date_updated DESC
+                        LIMIT 10
+            `, [userId]),
+            pool.query(`
+                    SELECT b.id, b.name, b.image_url, b.isbn
+                    FROM books b
+                    WHERE b.user_id = $1
+                      AND b.reading_status = ${ReadingStatusEnum.CURRENTLY_READING}
+                    ORDER BY b.date_updated DESC
+                        LIMIT 10
+            `, [userId]),
+            pool.query(`SELECT COUNT(*) AS count FROM books WHERE user_id = $1 AND reading_status = ${ReadingStatusEnum.READ}`, [userId]),
         ]);
 
         // Fold the denormalized category/book rows into one entry per
@@ -165,6 +193,9 @@ router.get('', requireAuth, async (req: Request, res: Response) => {
             totalAuthors: Number(totalAuthors.rows[0].count),
             categoryShelves: Array.from(categoryShelvesById.values()),
             currentlyOnLoan: currentlyOnLoan.rows,
+            wantToRead: wantToRead.rows,
+            currentlyReading: currentlyReading.rows,
+            totalRead: Number(totalRead.rows[0].count),
         });
 
     } catch (err) {

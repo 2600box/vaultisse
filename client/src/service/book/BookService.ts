@@ -4,6 +4,7 @@ import {BookStockStatusEnum, IBookStock} from "@/types/book/IBookStock";
 import axiosInstance from "@/plugins/axiosInstance";
 import {IBookAddMd} from "@/types/book/IBookAddMd";
 import {IBookFile} from "@/types/book/IBookFile";
+import {ReadingStatusEnum} from "@/types/book/IReadingStatus";
 
 /**
  * Thin HTTP client for the `/api/rest/book` endpoints (see server/src/routes/BooksRoute.ts):
@@ -40,6 +41,7 @@ export class BookService {
      * @param published_date Publication date, or null.
      * @param pages Page count.
      * @param format_id Format id, or null.
+     * @param reading_status The user's personal reading progress, or null to leave it untracked.
      */
     public async updateBook(
         id: number,
@@ -53,7 +55,8 @@ export class BookService {
         publisher: string | null,
         published_date: Date | null,
         pages: number,
-        format_id: number | null
+        format_id: number | null,
+        reading_status: ReadingStatusEnum | null
     ): Promise<void> {
         const {data} = await axiosInstance.put(`${PATH_PREFIX}/book/${id}`, {
             name: name,
@@ -66,7 +69,8 @@ export class BookService {
             publisher: publisher,
             published_date: published_date,
             pages: pages,
-            format_id: format_id
+            format_id: format_id,
+            reading_status: reading_status
         });
         return data;
     }

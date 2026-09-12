@@ -8,6 +8,7 @@ import IBookItem from "@/types/book/IBookItem";
 import BookAuthor from "@/model/author/BookAuthor";
 import {bookRoute} from "@/router/routes/BookRoute";
 import {ref, Ref, shallowRef, ShallowRef} from "vue";
+import {ReadingStatusEnum} from "@/types/book/IReadingStatus";
 
 export default abstract class ABook {
 
@@ -32,6 +33,9 @@ export default abstract class ABook {
     /** 2-letter language code, or null if unset. */
     protected m_languageCode: Ref<string | null>;
 
+    /** The user's personal reading progress for this book, or null if untracked. */
+    protected m_readingStatus: Ref<ReadingStatusEnum | null>;
+
     /** @param data Raw book item data from the server. */
     protected constructor(data: IBookItem) {
         this.m_id = data.id;
@@ -41,6 +45,7 @@ export default abstract class ABook {
         this.m_isbn = ref(data.isbn);
         this.m_categoryId = ref(data.category_id);
         this.m_languageCode = ref(data.language_code);
+        this.m_readingStatus = ref(data.reading_status);
     }
 
     /** @returns The book id. */
@@ -111,6 +116,16 @@ export default abstract class ABook {
     /** @param value New 2-letter language code, or null to clear it. */
     public setLanguageCode(value: string | null) {
         this.m_languageCode.value = value;
+    }
+
+    /** @returns The user's personal reading progress for this book, or null if untracked. */
+    public getReadingStatus(): ReadingStatusEnum | null {
+        return this.m_readingStatus.value;
+    }
+
+    /** @param value New reading status, or null to stop tracking it. */
+    public setReadingStatus(value: ReadingStatusEnum | null) {
+        this.m_readingStatus.value = value;
     }
 
     /** @returns In-app router path to this book's detail view, e.g. "/book/12". */

@@ -1,6 +1,43 @@
 <template>
 	<page-component :model="model">
 		<template v-slot:append>
+			<v-menu v-if="!editing">
+				<template v-slot:activator="{ props: readingStatusMenuProps }">
+					<v-btn
+						v-bind="readingStatusMenuProps"
+						variant="text"
+						density="comfortable"
+						class="text-none mr-2"
+						:prepend-icon="readingStatusIcon"
+						append-icon="mdi-chevron-down"
+						:loading="loadingReadingStatus"
+						small
+					>
+						{{ readingStatusName || t(AppLabels.READING_STATUS) }}
+					</v-btn>
+				</template>
+
+				<v-list density="compact">
+					<v-list-item
+						v-for="option in readingStatusJson()"
+						:key="option.value"
+						@click="quickSetReadingStatus(option.value)"
+					>
+						<template v-slot:prepend>
+							<v-icon size="18">{{ readingStatus === option.value ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank' }}</v-icon>
+						</template>
+						<v-list-item-title>{{ option.text }}</v-list-item-title>
+					</v-list-item>
+
+					<template v-if="readingStatus !== null">
+						<v-divider class="my-1"></v-divider>
+						<v-list-item @click="quickSetReadingStatus(null)">
+							<v-list-item-title>{{ t(AppLabels.CLEAR) }}</v-list-item-title>
+						</v-list-item>
+					</template>
+				</v-list>
+			</v-menu>
+
 			<v-btn
 				variant="text"
 				density="comfortable"
@@ -95,6 +132,10 @@
 										<div class="pb-book-view-field">
 											<div class="pb-eyebrow">{{t(AppLabels.PUBLISHED_DATE)}}</div>
 											<div class="pb-book-view-value">{{ publishedDateDisplay || emptyValue }}</div>
+										</div>
+										<div class="pb-book-view-field">
+											<div class="pb-eyebrow">{{t(AppLabels.READING_STATUS)}}</div>
+											<div class="pb-book-view-value">{{ readingStatusName || emptyValue }}</div>
 										</div>
 									</div>
 
@@ -201,6 +242,19 @@
 										></v-text-field>
 									</div>
 
+									<!-- Reading status -->
+									<v-select
+										v-model="readingStatus"
+										:disabled="disableFields"
+										:items="readingStatusJson()"
+										:label="t(AppLabels.READING_STATUS)"
+										density="compact"
+										variant="outlined"
+										item-value="value"
+										item-title="text"
+										clearable
+									></v-select>
+
 									<!-- Authors -->
 									<v-autocomplete
 										v-model="authors"
@@ -304,6 +358,7 @@ import BookImage from "@/views/book/compoents/BookImage.vue";
 import BookFile from "@/views/book/compoents/BookFile.vue";
 import {AppLabels} from "@/plugins/i18n/AppLabels";
 import {useI18n} from "vue-i18n";
+import {ReadingStatusEnum} from "@/types/book/IReadingStatus";
 
 const model = new BookController();
 
@@ -332,6 +387,7 @@ interface BookSnapshot {
 	publisher: string | null;
 	publishedDate: Date | null;
 	description: string;
+	readingStatus: ReadingStatusEnum | null;
 }
 
 let snapshot: BookSnapshot | null = null;
@@ -350,6 +406,9 @@ const loadingDelete: Ref<boolean> = ref(false);
  *
  */
 const loadingAuthors: Ref<boolean> = ref(false);
+
+/** Toolbar reading-status menu's own save-in-flight flag, separate from the edit form's `loadingUpdate`. */
+const loadingReadingStatus: Ref<boolean> = ref(false);
 
 const loadedAuthors: ShallowRef<BookAuthor[]> = shallowRef(model.getBook().getAuthors());
 
@@ -436,6 +495,48 @@ const category = computed({
 })
 
 const categoryName = computed(() => applicationService.getCategory(model.getBook().getCategoryId())?.getCategoryName() ?? null);
+
+const readingStatus = computed({
+	get() {
+		return model.getBook().getReadingStatus();
+	},
+	set(val: ReadingStatusEnum | null) {
+		model.getBook().setReadingStatus(val);
+		hasChanges.value = true;
+	}
+})
+
+const READING_STATUS_LABELS: Record<ReadingStatusEnum, AppLabels> = {
+	[ReadingStatusEnum.WANT_TO_READ]: AppLabels.WANT_TO_READ,
+	[ReadingStatusEnum.CURRENTLY_READING]: AppLabels.CURRENTLY_READING,
+	[ReadingStatusEnum.READ]: AppLabels.READ,
+}
+
+const readingStatusName = computed(() => {
+	const status = model.getBook().getReadingStatus();
+	return status != null ? t(READING_STATUS_LABELS[status]) : null;
+})
+
+const READING_STATUS_ICONS: Record<ReadingStatusEnum, string> = {
+	[ReadingStatusEnum.WANT_TO_READ]: "mdi-bookmark-outline",
+	[ReadingStatusEnum.CURRENTLY_READING]: "mdi-book-open-page-variant-outline",
+	[ReadingStatusEnum.READ]: "mdi-check-circle-outline",
+}
+
+/** Toolbar button's icon: the current status's icon, or a plain outline bookmark when untracked. */
+const readingStatusIcon = computed(() => {
+	const status = model.getBook().getReadingStatus();
+	return status != null ? READING_STATUS_ICONS[status] : "mdi-bookmark-outline";
+})
+
+function readingStatusJson() {
+	return (Object.values(ReadingStatusEnum).filter((v) => typeof v === "number") as ReadingStatusEnum[]).map((status) => {
+		return {
+			value: status,
+			text: t(READING_STATUS_LABELS[status])
+		}
+	})
+}
 
 const publisher = computed({
 	get() {
@@ -531,6 +632,26 @@ function categoriesJson() {
 	})
 }
 
+/**
+ * Set the reading status from the toolbar menu and persist it immediately -
+ * a quick-access shortcut for the same field the edit form's "Reading
+ * status" select controls, for when the user doesn't want to open the full
+ * edit form just to change it. Only shown outside edit mode (see the
+ * `v-menu`'s `v-if="!editing"`), so there's never unsaved edit-form state to
+ * clash with.
+ */
+async function quickSetReadingStatus(status: ReadingStatusEnum | null) {
+	if (loadingReadingStatus.value) return;
+
+	loadingReadingStatus.value = true;
+	try {
+		model.getBook().setReadingStatus(status);
+		await model.getBook().updateBook();
+	} finally {
+		loadingReadingStatus.value = false;
+	}
+}
+
 function deleteBook() {
 	confirmationDialogController.showDialog(
 		`${t(AppLabels.DELETE_BOOK)} '${model.getBook().getName()}'`,
@@ -560,6 +681,7 @@ function startEditing() {
 		publisher: book.getPublisher(),
 		publishedDate: book.getPublishDate(),
 		description: book.getDescription(),
+		readingStatus: book.getReadingStatus(),
 	};
 	editing.value = true;
 }
@@ -578,6 +700,7 @@ function cancelEditing() {
 		book.setPublisher(snapshot.publisher);
 		book.setPublishDate(snapshot.publishedDate);
 		book.setDescription(snapshot.description);
+		book.setReadingStatus(snapshot.readingStatus);
 	}
 
 	hasChanges.value = false;

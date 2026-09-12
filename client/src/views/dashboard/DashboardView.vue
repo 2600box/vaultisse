@@ -161,6 +161,84 @@
 				</dashboard-card>
 			</div>
 
+			<div class="mt-3 dashboard-reading-row">
+				<dashboard-card :title="t(AppLabels.CURRENTLY_READING)" card-css-class="dashboard-reading-card">
+					<template v-slot:actions>
+						<router-link
+							v-if="controller.getCurrentlyReading().length > 0"
+							:to="searchRoute.getPathForFilter(SearchFilter.CURRENTLY_READING)"
+							class="dashboard-card-view-all"
+						>
+							{{ t(AppLabels.VIEW_ALL) }}
+							<v-icon size="14">mdi-arrow-right</v-icon>
+						</router-link>
+					</template>
+
+					<empty-state
+						v-if="controller.getCurrentlyReading().length === 0"
+						compact
+						icon="mdi-book-open-page-variant-outline"
+						:title="t(AppLabels.DASHBOARD_NO_CURRENTLY_READING)"
+					/>
+
+					<div v-else class="dashboard-shelf-scroll">
+						<router-link
+							v-for="book in controller.getCurrentlyReading()"
+							:key="book.id"
+							:to="getBookUrl(book.id)"
+							class="dashboard-shelf-book"
+						>
+							<img
+								:src="book.image_url ?? notFound"
+								@error="onCoverError"
+								class="dashboard-shelf-cover"
+							/>
+							<span class="dashboard-shelf-title">{{ book.name }}</span>
+						</router-link>
+					</div>
+				</dashboard-card>
+
+				<dashboard-card :title="t(AppLabels.WANT_TO_READ)" card-css-class="dashboard-reading-card">
+					<template v-slot:actions>
+						<router-link
+							v-if="controller.getWantToRead().length > 0"
+							:to="searchRoute.getPathForFilter(SearchFilter.WANT_TO_READ)"
+							class="dashboard-card-view-all"
+						>
+							{{ t(AppLabels.VIEW_ALL) }}
+							<v-icon size="14">mdi-arrow-right</v-icon>
+						</router-link>
+					</template>
+
+					<empty-state
+						v-if="controller.getWantToRead().length === 0"
+						compact
+						icon="mdi-bookmark-outline"
+						:title="t(AppLabels.DASHBOARD_NO_WANT_TO_READ)"
+					/>
+
+					<div v-else class="dashboard-shelf-scroll">
+						<router-link
+							v-for="book in controller.getWantToRead()"
+							:key="book.id"
+							:to="getBookUrl(book.id)"
+							class="dashboard-shelf-book"
+						>
+							<img
+								:src="book.image_url ?? notFound"
+								@error="onCoverError"
+								class="dashboard-shelf-cover"
+							/>
+							<span class="dashboard-shelf-title">{{ book.name }}</span>
+						</router-link>
+					</div>
+				</dashboard-card>
+
+				<dashboard-card :title="t(AppLabels.DASHBOARD_TOTAL_READ)" card-css-class="dashboard-reading-stat">
+					<div class="dashboard-stat-number">{{ controller.getTotalRead() }}</div>
+				</dashboard-card>
+			</div>
+
 			<div class="mt-3">
 				<dashboard-card :title="t(AppLabels.DASHBOARD_CHART)" large>
 					<books-in-time-chart :data="controller.getBooksInTime()"/>
@@ -175,8 +253,9 @@
  * Dashboard/overview view: an editorial hero (books added this month, a
  * horizontally scrolling "shelf" of recently added covers, and category
  * pills), "browse by category" shelves, a "currently on loan" list (with a
- * link through to the full Loans view), and the books-added-over-time
- * chart, all backed by `DashboardController`.
+ * link through to the full Loans view), "currently reading"/"want to read"
+ * shelves with a "books read" counter, and the books-added-over-time chart,
+ * all backed by `DashboardController`.
  */
 import PageComponent from "@/views/PageComponent.vue";
 import DashboardController from "@/controller/dashboard/DashboardController";
@@ -191,6 +270,7 @@ import EmptyState from "@/components/emptyState/EmptyState.vue";
 import router from "@/router/Router";
 import {searchRoute} from "@/router/routes/SearchRoute";
 import {loansRoute} from "@/router/routes/LoansRoute";
+import {SearchFilter} from "@/types/search/SearchFilter";
 //@ts-ignore
 import notFound from "@/assets/images/notFound.jpg";
 
@@ -440,6 +520,34 @@ const categoryShelvesWithBooks = computed(() => controller.getCategoryShelves().
 }
 
 .dashboard-card-view-all:hover {
+	color: var(--pb-accent);
+}
+
+.dashboard-reading-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 16px;
+	align-items: stretch;
+}
+
+.dashboard-reading-row > * {
+	flex: 1 1 280px;
+	min-width: 0;
+}
+
+.dashboard-reading-stat {
+	flex: 0 1 160px;
+}
+
+.dashboard-stat-number {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	min-height: 64px;
+	font-family: var(--pb-font-display);
+	font-size: 36px;
+	font-weight: 700;
 	color: var(--pb-accent);
 }
 </style>

@@ -23,6 +23,14 @@ const GOODREADS_CSV = [
     `2,No ISBN Book,Anne Frank,"Frank, Anne",,"=""""","=""""",2.0,Bantam Books,Mass Market Paperback,256,1994,1947,,2026/09/11,to-read,"to-read (#2)",to-read,,,,0,0`,
 ].join("\n");
 
+const GOODREADS_SHELVES_CSV = [
+    "Title,Author,ISBN,ISBN13,Publisher,Binding,Number of Pages,Year Published,Original Publication Year,Exclusive Shelf",
+    'To Read Book,Someone,"=""""","=""""",Pub,Paperback,100,2000,2000,to-read',
+    'Reading Now Book,Someone,"=""""","=""""",Pub,Paperback,100,2000,2000,currently-reading',
+    'Finished Book,Someone,"=""""","=""""",Pub,Paperback,100,2000,2000,read',
+    'Unknown Shelf Book,Someone,"=""""","=""""",Pub,Paperback,100,2000,2000,some-custom-shelf',
+].join("\n");
+
 describe("GET /import/template/:origin", () => {
     it("downloads the vaultisse template as a CSV attachment", async () => {
         const res = await user.agent.get("/api/rest/import/template/vaultisse");
@@ -119,6 +127,24 @@ describe("POST /import/library - goodreads origin", () => {
         expect(res.body.failed).toBe(1);
         expect(res.body.errors[0]).toMatchObject({reason: "Missing title"});
     });
+
+    it("maps the Exclusive Shelf column onto reading_status, leaving an unrecognized shelf untracked", async () => {
+        const res = await user.agent
+            .post("/api/rest/import/library")
+            .field("origin", "goodreads")
+            .attach("file", Buffer.from(GOODREADS_SHELVES_CSV), "shelves.csv");
+
+        expect(res.status).toBe(200);
+        expect(res.body).toMatchObject({imported: 4, skipped: 0, failed: 0});
+
+        const searchRes = await user.agent.get("/api/rest/book/search");
+        const byName = (name: string) => searchRes.body.books.find((b: any) => b.name === name);
+
+        expect(byName("To Read Book").reading_status).toBe(0);
+        expect(byName("Reading Now Book").reading_status).toBe(1);
+        expect(byName("Finished Book").reading_status).toBe(2);
+        expect(byName("Unknown Shelf Book").reading_status).toBeNull();
+    });
 });
 
 const VAULTISSE_CSV_HEADER = "Title,Authors,ISBN,Publisher,Published Year,Pages,Format,Category,Description,Language,Cover";
@@ -195,5 +221,21 @@ describe("POST /import/library - vaultisse origin", () => {
 
         const bookRes = await user.agent.get("/api/rest/book/search").query({query: "No Cover Book"});
         expect(bookRes.body.books[0].image_url).toBeFalsy();
+    });
+
+    it("maps the Reading Status column onto reading_status", async () => {
+        const csv = [
+            `${VAULTISSE_CSV_HEADER},Reading Status`,
+            "Currently Reading Vaultisse Book,Someone,,,,,,,,,,currently-reading",
+        ].join("\n");
+
+        const res = await user.agent
+            .post("/api/rest/import/library")
+            .field("origin", "vaultisse")
+            .attach("file", Buffer.from(csv), "lib.csv");
+        expect(res.body.imported).toBe(1);
+
+        const bookRes = await user.agent.get("/api/rest/book/search").query({query: "Currently Reading Vaultisse Book"});
+        expect(bookRes.body.books[0].reading_status).toBe(1);
     });
 });

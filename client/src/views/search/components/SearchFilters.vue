@@ -70,6 +70,14 @@ const filters = computed(() => [
 	{
 		title: t(AppLabels.RECENT_FILTER),
 		value: SearchFilter.RECENT
+	},
+	{
+		title: t(AppLabels.WANT_TO_READ),
+		value: SearchFilter.WANT_TO_READ
+	},
+	{
+		title: t(AppLabels.CURRENTLY_READING),
+		value: SearchFilter.CURRENTLY_READING
 	}
 ])
 

@@ -11,4 +11,8 @@ export interface IBookCounters {
     onLoan: number;
     /** Books with zero stock entries. */
     noStock: number;
+    /** Books on the user's "want to read" shelf. */
+    wantToRead: number;
+    /** Books on the user's "currently reading" shelf. */
+    currentlyReading: number;
 }

@@ -93,6 +93,37 @@ describe("PUT /book/:id", () => {
         const res = await user.agent.put("/api/rest/book/999999999").send({name: "X"});
         expect(res.status).toBe(404);
     });
+
+    it("sets and clears the reading status", async () => {
+        const createRes = await user.agent.post("/api/rest/book").field("name", "Reading Status Book");
+        const id = createRes.body;
+
+        const updateRes = await user.agent.put(`/api/rest/book/${id}`).send({
+            name: "Reading Status Book", authors: [], reading_status: 1,
+        });
+        expect(updateRes.status).toBe(200);
+
+        const getRes = await user.agent.get(`/api/rest/book/${id}`);
+        expect(getRes.body.reading_status).toBe(1);
+
+        const clearRes = await user.agent.put(`/api/rest/book/${id}`).send({
+            name: "Reading Status Book", authors: [], reading_status: null,
+        });
+        expect(clearRes.status).toBe(200);
+
+        const clearedRes = await user.agent.get(`/api/rest/book/${id}`);
+        expect(clearedRes.body.reading_status).toBeNull();
+    });
+
+    it("400s on an invalid reading status", async () => {
+        const createRes = await user.agent.post("/api/rest/book").field("name", "Bad Reading Status Book");
+        const id = createRes.body;
+
+        const res = await user.agent.put(`/api/rest/book/${id}`).send({
+            name: "Bad Reading Status Book", authors: [], reading_status: 99,
+        });
+        expect(res.status).toBe(400);
+    });
 });
 
 describe("DELETE /book/:id", () => {
@@ -141,6 +172,26 @@ describe("GET /book/search", () => {
         const res = await user.agent.get("/api/rest/book/search").query({category_id: categoryId});
         expect(res.body.books.some((b: any) => b.id === createRes.body)).toBe(true);
     });
+
+    it("filters by WANT_TO_READ and CURRENTLY_READING reading status", async () => {
+        const wantToReadRes = await user.agent.post("/api/rest/book").field("name", "Want To Read Search Book");
+        await user.agent.put(`/api/rest/book/${wantToReadRes.body}`).send({
+            name: "Want To Read Search Book", authors: [], reading_status: 0,
+        });
+
+        const currentlyReadingRes = await user.agent.post("/api/rest/book").field("name", "Currently Reading Search Book");
+        await user.agent.put(`/api/rest/book/${currentlyReadingRes.body}`).send({
+            name: "Currently Reading Search Book", authors: [], reading_status: 1,
+        });
+
+        const wantToReadSearch = await user.agent.get("/api/rest/book/search").query({filters: "WANT_TO_READ"});
+        expect(wantToReadSearch.body.books.some((b: any) => b.id === wantToReadRes.body)).toBe(true);
+        expect(wantToReadSearch.body.books.some((b: any) => b.id === currentlyReadingRes.body)).toBe(false);
+
+        const currentlyReadingSearch = await user.agent.get("/api/rest/book/search").query({filters: "CURRENTLY_READING"});
+        expect(currentlyReadingSearch.body.books.some((b: any) => b.id === currentlyReadingRes.body)).toBe(true);
+        expect(currentlyReadingSearch.body.books.some((b: any) => b.id === wantToReadRes.body)).toBe(false);
+    });
 });
 
 describe("GET /book/counters", () => {
@@ -149,6 +200,18 @@ describe("GET /book/counters", () => {
         const res = await user.agent.get("/api/rest/book/counters");
         expect(res.status).toBe(200);
         expect(res.body.total).toBeGreaterThanOrEqual(1);
+    });
+
+    it("counts books by reading status", async () => {
+        const createRes = await user.agent.post("/api/rest/book").field("name", "Counted Reading Status Book");
+        await user.agent.put(`/api/rest/book/${createRes.body}`).send({
+            name: "Counted Reading Status Book", authors: [], reading_status: 0,
+        });
+
+        const res = await user.agent.get("/api/rest/book/counters");
+        expect(res.status).toBe(200);
+        expect(res.body.wantToRead).toBeGreaterThanOrEqual(1);
+        expect(res.body.currentlyReading).toBeGreaterThanOrEqual(0);
     });
 });
 

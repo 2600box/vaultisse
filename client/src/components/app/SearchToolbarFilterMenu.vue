@@ -122,7 +122,9 @@ const filterOptions = computed(() => [
 	...(applicationService.getUser().isLeasingEnabled() ? [
 		{title: t(AppLabels.ON_LOAN_FILTER), value: SearchFilter.ON_LOAN}
 	] : []),
-	{title: t(AppLabels.RECENT_FILTER), value: SearchFilter.RECENT}
+	{title: t(AppLabels.RECENT_FILTER), value: SearchFilter.RECENT},
+	{title: t(AppLabels.WANT_TO_READ), value: SearchFilter.WANT_TO_READ},
+	{title: t(AppLabels.CURRENTLY_READING), value: SearchFilter.CURRENTLY_READING}
 ]);
 
 const hasActiveFilters = computed(() => {

@@ -38,6 +38,12 @@ export default interface IDashboard {
     categoryShelves: IDashboardCategoryShelf[];
     /** Books currently on loan, with who they're loaned to. */
     currentlyOnLoan: IDashboardLoan[];
+    /** Books on the user's "want to read" shelf, most recently updated first. */
+    wantToRead: IDashboardBook[];
+    /** Books on the user's "currently reading" shelf, most recently updated first. */
+    currentlyReading: IDashboardBook[];
+    /** Total number of books marked as read. */
+    totalRead: number;
 }
 
 /** A category with a sample of its books, for the dashboard's category pills and shelves. */

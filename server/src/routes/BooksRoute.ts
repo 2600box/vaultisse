@@ -32,6 +32,7 @@ import {normalizeAndValidateIsbn} from "../utils/IsbnVerification";
 import {isValidEpub, isValidMobi, isValidPdf} from "../utils/FileSignature";
 import {recordLoan, recordReturn} from "../utils/LoanHistory";
 import {handleUploadError} from "../middlewares/UploadErrorMiddleware";
+import {ReadingStatusEnum} from "../types/book/IReadingStatus";
 // @ts-ignore
 const router: Router = Router();
 
@@ -146,6 +147,7 @@ router.get('/search', requireAuth, async (req: Request, res: Response) => {
                    books.isbn,
                    books.category_id,
                    books.language_code,
+                   books.reading_status,
                    COALESCE(
                            json_agg(
                                    json_build_object(
@@ -196,6 +198,14 @@ router.get('/search', requireAuth, async (req: Request, res: Response) => {
                         conditions.push(`books.date_created >= NOW() - INTERVAL '30 days'`);
                         break;
                     }
+                    case SearchFilter.WANT_TO_READ: {
+                        conditions.push(`books.reading_status = ${ReadingStatusEnum.WANT_TO_READ}`);
+                        break;
+                    }
+                    case SearchFilter.CURRENTLY_READING: {
+                        conditions.push(`books.reading_status = ${ReadingStatusEnum.CURRENTLY_READING}`);
+                        break;
+                    }
                 }
             })
         }
@@ -240,6 +250,7 @@ router.get('/search', requireAuth, async (req: Request, res: Response) => {
                 books.isbn,
                 books.category_id,
                 books.language_code,
+                books.reading_status,
                 books.date_created
             ORDER BY ${ORDER_BY_CLAUSES[sort]}
             LIMIT ${MAX_ROWS} OFFSET ${skip};
@@ -273,7 +284,7 @@ router.get('/search', requireAuth, async (req: Request, res: Response) => {
  * Auth: required.
  *
  * Example response (200):
- *  { "total": 42, "recent": 3, "onLoan": 5, "noStock": 10 }
+ *  { "total": 42, "recent": 3, "onLoan": 5, "noStock": 10, "wantToRead": 8, "currentlyReading": 2 }
  */
 // @ts-ignore
 router.get('/counters', requireAuth, async (req: Request, res: Response) => {
@@ -281,11 +292,13 @@ router.get('/counters', requireAuth, async (req: Request, res: Response) => {
     const pool = appService.getDatabasePool();
 
     try {
-        const [total, recent, onLoan, noStock] = await Promise.all([
+        const [total, recent, onLoan, noStock, wantToRead, currentlyReading] = await Promise.all([
             pool.query(`SELECT COUNT(*) FROM books WHERE user_id = $1`, [userId]),
             pool.query(`SELECT COUNT(*) FROM books WHERE user_id = $1 AND date_created >= NOW() - INTERVAL '30 days'`, [userId]),
             pool.query(`SELECT COUNT(*) FROM books WHERE user_id = $1 AND id IN (SELECT book_id FROM book_stocks WHERE user_id = $1 AND status = 2)`, [userId]),
             pool.query(`SELECT COUNT(*) FROM books WHERE user_id = $1 AND id NOT IN (SELECT book_id FROM book_stocks WHERE user_id = $1)`, [userId]),
+            pool.query(`SELECT COUNT(*) FROM books WHERE user_id = $1 AND reading_status = ${ReadingStatusEnum.WANT_TO_READ}`, [userId]),
+            pool.query(`SELECT COUNT(*) FROM books WHERE user_id = $1 AND reading_status = ${ReadingStatusEnum.CURRENTLY_READING}`, [userId]),
         ]);
 
         res.status(200).json({
@@ -293,6 +306,8 @@ router.get('/counters', requireAuth, async (req: Request, res: Response) => {
             recent: Number(recent.rows[0].count),
             onLoan: Number(onLoan.rows[0].count),
             noStock: Number(noStock.rows[0].count),
+            wantToRead: Number(wantToRead.rows[0].count),
+            currentlyReading: Number(currentlyReading.rows[0].count),
         });
     } catch (err: any) {
         console.error('Error executing query', err.stack);
@@ -324,6 +339,7 @@ router.get('/counters', requireAuth, async (req: Request, res: Response) => {
  *    "published_date": "1937-09-21",
  *    "pages": 310,
  *    "format_id": 1,
+ *    "reading_status": null,
  *    "stocks": [
  *      { "id": 1, "code": "a1b2c3d4e5", "status": 0, "location_id": 2,
  *        "location_name": "Main shelf", "customer_id": null, "customer_name": null }
@@ -358,6 +374,7 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
                    books.date_updated,
                    books.pages,
                    books.format_id,
+                   books.reading_status,
                    COALESCE(
                            json_agg(
                                DISTINCT jsonb_build_object(
@@ -410,7 +427,8 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
                      books.date_created,
                      books.date_updated,
                      books.pages,
-                     books.format_id;
+                     books.format_id,
+                     books.reading_status;
         `, [id, userId]);
 
         if (result.rows.length !== 1) {
@@ -446,12 +464,14 @@ router.get('/:id', requireAuth, async (req: Request, res: Response) => {
  *    "publisher": "HarperCollins",
  *    "published_date": "1937-09-21",
  *    "pages": 310,
- *    "format_id": 1
+ *    "format_id": 1,
+ *    "reading_status": 1          // 0 = want to read, 1 = currently reading, 2 = read; null/omitted = untracked
  *  }
  *
  * Notes:
  *  - `image_url` is validated by `isAllowedImageUrl()` - only our own
  *    data: URIs or the whitelisted Google Books / Open Library hosts are accepted.
+ *  - `reading_status` must be null or one of 0/1/2 (400 otherwise).
  *  - The whole update (books row + book_authors diff) runs in one transaction.
  *
  * Responses: 200 {"message": "Book updated successfully"} |
@@ -476,11 +496,16 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
         publisher,
         published_date,
         pages,
-        format_id
+        format_id,
+        reading_status
     } = req.body;
 
     if (image_url && !isAllowedImageUrl(image_url)) {
         return res.status(400).send({error: "Invalid image URL"});
+    }
+
+    if (reading_status != null && ![ReadingStatusEnum.WANT_TO_READ, ReadingStatusEnum.CURRENTLY_READING, ReadingStatusEnum.READ].includes(reading_status)) {
+        return res.status(400).send({error: "Invalid reading status"});
     }
 
     // Database connection
@@ -510,9 +535,10 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
                 published_date = $8,
                 language_code  = $9,
                 pages          = $10,
+                reading_status = $11,
                 date_updated   = CURRENT_TIMESTAMP
-            WHERE id = $11
-              AND user_id = $12
+            WHERE id = $12
+              AND user_id = $13
         `;
         const updateValues = [
             name,
@@ -525,6 +551,7 @@ router.put('/:id', requireAuth, async (req: Request, res: Response) => {
             published_date,
             language_code,
             pages,
+            reading_status ?? null,
             id,
             userId
         ];

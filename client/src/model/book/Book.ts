@@ -86,6 +86,7 @@ export default class Book extends BookItem {
             pages: null,
             stocks: [],
             format_id: null,
+            reading_status: null,
             date_created: "",
             date_updated: "",
             files: [],
@@ -259,7 +260,8 @@ export default class Book extends BookItem {
                 this.m_publisher.value,
                 this.m_publishedDate.value,
                 this.m_pages.value,
-                this.m_format.value ? this.m_format.value.getFormatId() : null
+                this.m_format.value ? this.m_format.value.getFormatId() : null,
+                this.getReadingStatus()
             )
             appSnackbarController.show({message: i18n.global.t(AppLabels.SNACKBAR_BOOK_UPDATED)})
         } catch (e) {

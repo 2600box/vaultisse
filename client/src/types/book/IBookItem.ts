@@ -1,5 +1,6 @@
 import IBookAuthor from "@/types/book/IBookAuthor";
 import {IBookBase} from "@/types/book/IBookBase";
+import {ReadingStatusEnum} from "@/types/book/IReadingStatus";
 
 /**
  * Book shape returned by the search list endpoint (`GET /book/search`) -
@@ -19,4 +20,6 @@ export default interface IBookItem extends IBookBase{
     language_code: string | null;
     /** Authors attached to this book. */
     authors: IBookAuthor[];
+    /** The user's personal reading progress for this book, or null if untracked. */
+    reading_status: ReadingStatusEnum | null;
 }

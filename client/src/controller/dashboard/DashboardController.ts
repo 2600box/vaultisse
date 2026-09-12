@@ -101,6 +101,24 @@ export default class DashboardController extends BaseController<IDashboard> {
     private m_currentlyOnLoan: IDashboardLoan[] = [];
 
     /**
+     * Books on the user's "want to read" shelf.
+     * @private
+     */
+    private m_wantToRead: IDashboardBook[] = [];
+
+    /**
+     * Books on the user's "currently reading" shelf.
+     * @private
+     */
+    private m_currentlyReading: IDashboardBook[] = [];
+
+    /**
+     * Total number of books marked as read.
+     * @private
+     */
+    private m_totalRead: number = 0;
+
+    /**
      * Constructor initializes the controller with the identifier "Dashboard".
      */
     public constructor() {
@@ -133,6 +151,9 @@ export default class DashboardController extends BaseController<IDashboard> {
         this.m_totalAuthors = data.totalAuthors;
         this.m_categoryShelves = data.categoryShelves;
         this.m_currentlyOnLoan = data.currentlyOnLoan;
+        this.m_wantToRead = data.wantToRead;
+        this.m_currentlyReading = data.currentlyReading;
+        this.m_totalRead = data.totalRead;
     }
 
     /**
@@ -224,6 +245,27 @@ export default class DashboardController extends BaseController<IDashboard> {
      */
     public getCurrentlyOnLoan() {
         return this.m_currentlyOnLoan;
+    }
+
+    /**
+     * Returns the books on the user's "want to read" shelf.
+     */
+    public getWantToRead() {
+        return this.m_wantToRead;
+    }
+
+    /**
+     * Returns the books on the user's "currently reading" shelf.
+     */
+    public getCurrentlyReading() {
+        return this.m_currentlyReading;
+    }
+
+    /**
+     * Returns the total number of books marked as read.
+     */
+    public getTotalRead() {
+        return this.m_totalRead;
     }
 
 }

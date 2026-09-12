@@ -117,6 +117,30 @@
 						<v-chip size="x-small" variant="tonal" class="app-menu-count">{{ counters.noStock }}</v-chip>
 					</template>
 				</v-list-item>
+
+				<v-list-item
+					:to="searchRoute.getPathForFilter(SearchFilter.WANT_TO_READ)"
+					:active="isLibraryWantToReadActive"
+					:title="t(AppLabels.WANT_TO_READ)"
+					density="compact"
+					class="app-menu-item app-menu-subitem"
+				>
+					<template v-slot:append>
+						<v-chip size="x-small" variant="tonal" class="app-menu-count">{{ counters.wantToRead }}</v-chip>
+					</template>
+				</v-list-item>
+
+				<v-list-item
+					:to="searchRoute.getPathForFilter(SearchFilter.CURRENTLY_READING)"
+					:active="isLibraryCurrentlyReadingActive"
+					:title="t(AppLabels.CURRENTLY_READING)"
+					density="compact"
+					class="app-menu-item app-menu-subitem"
+				>
+					<template v-slot:append>
+						<v-chip size="x-small" variant="tonal" class="app-menu-count">{{ counters.currentlyReading }}</v-chip>
+					</template>
+				</v-list-item>
 			</v-list-group>
 
 			<v-list-item
@@ -217,7 +241,7 @@ watch(() => route.path, () => {
 const opened: Ref<string[]> = ref(route.path === SearchRoute.PATH ? ["library"] : []);
 
 /** Lightweight book totals (all/recent/on loan/no stock) shown as badges on the "Library" section and its quick filters. */
-const counters: Ref<IBookCounters> = ref({total: 0, recent: 0, onLoan: 0, noStock: 0});
+const counters: Ref<IBookCounters> = ref({total: 0, recent: 0, onLoan: 0, noStock: 0, wantToRead: 0, currentlyReading: 0});
 
 /**
  * The "Library" quick filters all point to the same route path (only the
@@ -236,6 +260,8 @@ const isLibraryViewAllActive = computed(() => route.path === SearchRoute.PATH &&
 const isLibraryRecentActive = computed(() => currentLibraryFilter.value === SearchFilter.RECENT);
 const isLibraryOnLoanActive = computed(() => currentLibraryFilter.value === SearchFilter.ON_LOAN);
 const isLibraryNoStockActive = computed(() => currentLibraryFilter.value === SearchFilter.NO_STOCK);
+const isLibraryWantToReadActive = computed(() => currentLibraryFilter.value === SearchFilter.WANT_TO_READ);
+const isLibraryCurrentlyReadingActive = computed(() => currentLibraryFilter.value === SearchFilter.CURRENTLY_READING);
 
 onMounted(async () => {
 	try {

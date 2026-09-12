@@ -12,11 +12,24 @@
 import {parse} from "csv-parse/sync";
 import {IImportedBook} from "./IImportedBook";
 import {normalizeAndValidateIsbn} from "../../../utils/IsbnVerification";
+import {ReadingStatusEnum} from "../../../types/book/IReadingStatus";
 
 export const VAULTISSE_CSV_HEADERS = [
     "Title", "Authors", "ISBN", "Publisher", "Published Year",
-    "Pages", "Format", "Category", "Description", "Language", "Cover"
+    "Pages", "Format", "Category", "Description", "Language", "Cover", "Reading Status"
 ];
+
+/** Matches `GoodreadsCsvParser.ts`'s shelf names, so the two origins share one vocabulary. */
+const READING_STATUS_VALUES: Record<string, ReadingStatusEnum> = {
+    "want-to-read": ReadingStatusEnum.WANT_TO_READ,
+    "currently-reading": ReadingStatusEnum.CURRENTLY_READING,
+    "read": ReadingStatusEnum.READ,
+};
+
+function toReadingStatus(value: string | undefined): ReadingStatusEnum | null {
+    const trimmed = value?.trim().toLowerCase();
+    return trimmed ? READING_STATUS_VALUES[trimmed] ?? null : null;
+}
 
 /** Wraps every field in quotes (escaping internal ones) - always valid CSV, no need to reason about which fields happen to contain a comma. */
 function toCsvRow(values: string[]): string {
@@ -29,7 +42,7 @@ export const VAULTISSE_CSV_TEMPLATE = [
     toCsvRow([
         "The Hobbit", "J.R.R. Tolkien", "9780261102217", "HarperCollins", "1937",
         "310", "Paperback", "Fantasy", "A hobbit's unexpected journey.", "en",
-        "https://covers.openlibrary.org/b/isbn/9780261102217-M.jpg"
+        "https://covers.openlibrary.org/b/isbn/9780261102217-M.jpg", "want-to-read"
     ])
 ].join("\r\n") + "\r\n";
 
@@ -80,5 +93,6 @@ export function parseVaultisseCsv(csvText: string): IImportedBook[] {
         // ImportRoute.ts, not here. Falls back to an ISBN cover lookup if
         // absent or rejected.
         imageUrl: row.Cover?.trim() || null,
+        readingStatus: toReadingStatus(row["Reading Status"]),
     }));
 }
