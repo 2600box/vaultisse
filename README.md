@@ -215,8 +215,8 @@ Create a PostgreSQL database and load the schema — `databaseSchema.sql` is alw
 kept up to date, so this is everything a new install needs:
 
 ```bash
-createdb paperbooks
-psql -d paperbooks -f assets/db/databaseSchema.sql
+createdb vaultisse
+psql -d vaultisse -f assets/db/databaseSchema.sql
 ```
 
 > There is no admin UI for the very first user, and none is needed: `/register` is a
@@ -236,7 +236,7 @@ version you're currently on, up through the version you're installing, in
 order:
 
 ```bash
-psql -d paperbooks -f assets/db/upgrade/1.0.0/1.sql   # example: apply the first v1.0.0 upgrade file
+psql -d vaultisse -f assets/db/upgrade/1.0.0/1.sql   # example: apply the first v1.0.0 upgrade file
 ```
 
 ### 3. Configure the server
@@ -247,7 +247,7 @@ Create `server/.env` (this file is git-ignored) with:
 API_PORT=3000
 DB_HOST=localhost
 DB_PORT=5432
-DB_NAME=paperbooks
+DB_NAME=vaultisse
 DB_USER=your_db_user
 DB_PASSWORD=your_db_password
 GOOGLE_BOOKS_API_KEY=            # optional, see Prerequisites
